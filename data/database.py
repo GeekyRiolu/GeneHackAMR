@@ -122,7 +122,9 @@ def save_analysis_result(
         
         session.add(result)
         session.commit()
-        return int(result.id)
+        # Get the id of the newly committed row
+        result_id = result.id
+        return result_id
     
     except Exception as e:
         session.rollback()
@@ -202,7 +204,9 @@ def save_sequence_data(
         
         session.add(data)
         session.commit()
-        return data.id
+        # Get the id of the newly committed row
+        data_id = data.id
+        return data_id
     
     except Exception as e:
         session.rollback()

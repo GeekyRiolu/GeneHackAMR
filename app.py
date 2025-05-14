@@ -188,6 +188,14 @@ if 'recommendations' not in st.session_state:
     st.session_state.recommendations = None
 if 'summary_report' not in st.session_state:
     st.session_state.summary_report = None
+if 'result_saved' not in st.session_state:
+    st.session_state.result_saved = False
+if 'current_sequence_name' not in st.session_state:
+    st.session_state.current_sequence_name = None
+if 'current_sequence_type' not in st.session_state:
+    st.session_state.current_sequence_type = None
+if 'analysis_history' not in st.session_state:
+    st.session_state.analysis_history = []
 
 # Sidebar for input options
 with st.sidebar:
@@ -197,7 +205,11 @@ with st.sidebar:
     if bacteria_animation:
         st_lottie(bacteria_animation, speed=1, height=150, key="bacteria_animation")
     
-    input_method = st.radio("Select Input Method:", ["FASTA File", "Raw Sequence"])
+    # Add tabs to sidebar for input, history, and settings
+    sidebar_tab1, sidebar_tab2 = st.tabs(["New Analysis", "History"])
+    
+    with sidebar_tab1:
+        input_method = st.radio("Select Input Method:", ["FASTA File", "Raw Sequence"])
     
     # Define sequence_data as None initially
     sequence_data = None
