@@ -122,9 +122,11 @@ def save_analysis_result(
         
         session.add(result)
         session.commit()
-        # Get the id of the newly committed row and convert to Python int
+        # Get the ID of the newly committed row
+        session.flush()
         session.refresh(result)
-        return result.id
+        # Need to explicitly convert to Python int to satisfy type checker
+        return int(str(result.id))
     
     except Exception as e:
         session.rollback()
@@ -204,9 +206,11 @@ def save_sequence_data(
         
         session.add(data)
         session.commit()
-        # Get the id of the newly committed row
+        # Get the ID of the newly committed row
+        session.flush()
         session.refresh(data)
-        return data.id
+        # Need to explicitly convert to Python int to satisfy type checker
+        return int(str(data.id))
     
     except Exception as e:
         session.rollback()

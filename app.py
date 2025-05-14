@@ -374,12 +374,20 @@ if st.session_state.analyzed:
     
     # Save Results button/section
     save_col1, save_col2 = st.columns([3, 1])
+    
+    # Initialize sequence_name as a variable
+    sequence_name = ""
+    
     with save_col1:
         if not st.session_state.result_saved:
             sequence_name = st.text_input("Sequence Name for Saving", 
                                          value=st.session_state.current_sequence_name if st.session_state.current_sequence_name else "My Sequence")
         else:
             st.info(f"Saved as: {st.session_state.current_sequence_name} ✓")
+    
+    # Initialize save_button variable
+    save_button = False
+    
     with save_col2:
         if not st.session_state.result_saved:
             save_button = st.button("Save Results", type="primary")
@@ -387,7 +395,7 @@ if st.session_state.analyzed:
             st.success("Saved to Database")
     
     # Handle save button click
-    if not st.session_state.result_saved and 'save_button' in locals() and save_button:
+    if not st.session_state.result_saved and save_button:
         # Check for required data
         if not st.session_state.genes or not st.session_state.proteins:
             st.error("Missing analysis data. Cannot save incomplete results.")
