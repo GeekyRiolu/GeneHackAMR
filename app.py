@@ -3,7 +3,13 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import os
+import json
+import requests
 from io import StringIO
+import time
+import py3Dmol
+from stmol import showmol
+from streamlit_lottie import st_lottie
 
 from utils.sequence_processor import (
     parse_fasta, 
@@ -30,15 +36,42 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Application title and description
-st.title("🧬 GeneHack AMR")
-st.subheader("Antimicrobial Resistance Prediction from Genomic Data")
+# Function to load lottie files
+def load_lottieurl(url: str):
+    """
+    Load a Lottie animation from a URL.
+    """
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception:
+        return None
 
-st.markdown("""
-This tool predicts antimicrobial resistance (AMR) from genetic sequences, identifies resistance genes, 
-translates them to proteins, and recommends effective antibiotics. Designed for researchers, healthcare 
-professionals, and bioinformatics experts.
-""")
+# Load animations
+dna_animation = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_xh8zdnlk.json")
+bacteria_animation = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_ksyj8dkc.json")
+analysis_animation = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_1cazwtnc.json")
+
+# Create header with animation
+header_col1, header_col2 = st.columns([3, 1])
+
+with header_col1:
+    # Application title and description
+    st.title("🧬 GeneHack AMR")
+    st.subheader("Antimicrobial Resistance Prediction from Genomic Data")
+    
+    st.markdown("""
+    This tool predicts antimicrobial resistance (AMR) from genetic sequences, identifies resistance genes, 
+    translates them to proteins, and recommends effective antibiotics. Designed for researchers, healthcare 
+    professionals, and bioinformatics experts.
+    """)
+
+with header_col2:
+    # DNA animation in the header
+    if dna_animation:
+        st_lottie(dna_animation, speed=1, height=200, key="dna_animation")
 
 # Initialize session state variables if they don't exist
 if 'analyzed' not in st.session_state:
@@ -57,7 +90,15 @@ if 'summary_report' not in st.session_state:
 # Sidebar for input options
 with st.sidebar:
     st.header("Input Options")
+    
+    # Add bacteria animation to sidebar
+    if bacteria_animation:
+        st_lottie(bacteria_animation, speed=1, height=150, key="bacteria_animation")
+    
     input_method = st.radio("Select Input Method:", ["FASTA File", "Raw Sequence"])
+    
+    # Define sequence_data as None initially
+    sequence_data = None
     
     if input_method == "FASTA File":
         uploaded_file = st.file_uploader("Upload FASTA file", type=["fasta", "fa", "fna", "ffn", "txt"])

@@ -8,5 +8,9 @@ dependencies = [
     "openai>=1.78.1",
     "pandas>=2.2.3",
     "plotly>=6.0.1",
+    "py3dmol>=2.4.2",
+    "stmol>=0.0.9",
+    "streamlit-lottie>=0.0.5",
     "streamlit>=1.45.1",
+    "requests>=2.32.3",
 ]
