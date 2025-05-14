@@ -1,10 +1,279 @@
+# """
+# Database module for GeneHack AMR - handles database connections and operations.
+# """
+
+# import os
+# import json
+# import datetime
+# from typing import Dict, List, Any, Optional
+# import sqlalchemy as sa
+# from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.orm import sessionmaker, relationship
+# from sqlalchemy.dialects.postgresql import JSON, JSONB
+
+# # Get database URL from environment variables
+# DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
+# # Create SQLAlchemy engine and session
+# engine = sa.create_engine(DATABASE_URL if DATABASE_URL else "sqlite:///genehack.db")
+# Session = sessionmaker(bind=engine)
+# Base = declarative_base()
+
+# class AnalysisResult(Base):
+#     """Model for storing analysis results."""
+#     __tablename__ = 'analysis_results'
+    
+#     id = sa.Column(sa.Integer, primary_key=True)
+#     created_at = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
+#     sequence_name = sa.Column(sa.String(255))
+#     sequence_type = sa.Column(sa.String(50))  # 'fasta' or 'raw'
+    
+#     # Store detailed results as JSON
+#     genes = sa.Column(JSONB)
+#     proteins = sa.Column(JSONB)
+#     resistance_data = sa.Column(JSONB)
+#     recommendations = sa.Column(JSONB)
+#     summary_report = sa.Column(sa.Text)
+    
+#     # Metrics
+#     num_genes = sa.Column(sa.Integer)
+#     num_resistance_markers = sa.Column(sa.Integer)
+    
+#     def to_dict(self) -> Dict[str, Any]:
+#         """Convert to dictionary for serialization."""
+#         return {
+#             'id': self.id,
+#             'created_at': self.created_at.isoformat() if self.created_at is not None else None,
+#             'sequence_name': self.sequence_name,
+#             'sequence_type': self.sequence_type,
+#             'num_genes': self.num_genes,
+#             'num_resistance_markers': self.num_resistance_markers,
+#             'genes': self.genes,
+#             'proteins': self.proteins,
+#             'resistance_data': self.resistance_data,
+#             'recommendations': self.recommendations,
+#             'summary_report': self.summary_report
+#         }
+
+# class SequenceData(Base):
+#     """Model for storing sequence data."""
+#     __tablename__ = 'sequence_data'
+    
+#     id = sa.Column(sa.Integer, primary_key=True)
+#     created_at = sa.Column(sa.DateTime, default=datetime.datetime.utcnow)
+#     name = sa.Column(sa.String(255))
+#     data_type = sa.Column(sa.String(50))  # 'fasta' or 'raw'
+#     sequence = sa.Column(sa.Text)
+#     description = sa.Column(sa.Text, nullable=True)
+    
+#     def to_dict(self) -> Dict[str, Any]:
+#         """Convert to dictionary for serialization."""
+#         return {
+#             'id': self.id,
+#             'created_at': self.created_at.isoformat() if self.created_at is not None else None,
+#             'name': self.name,
+#             'data_type': self.data_type,
+#             'sequence': self.sequence,
+#             'description': self.description
+#         }
+
+# def create_tables():
+#     """Create database tables."""
+#     Base.metadata.create_all(engine)
+
+# def save_analysis_result(
+#     sequence_name: str,
+#     sequence_type: str,
+#     genes: Any,
+#     proteins: Any,
+#     resistance_data: Any,
+#     recommendations: Any,
+#     summary_report: Any
+# ) -> int:
+#     """
+#     Save analysis results to the database.
+    
+#     Args:
+#         sequence_name: Name of the sequence
+#         sequence_type: Type of sequence ('fasta' or 'raw')
+#         genes: List of gene dictionaries
+#         proteins: List of protein dictionaries
+#         resistance_data: List of resistance data dictionaries
+#         recommendations: List of recommendation dictionaries
+#         summary_report: Summary report text
+        
+#     Returns:
+#         ID of the created record
+#     """
+#     session = Session()
+    
+#     try:
+#         result = AnalysisResult(
+#             sequence_name=sequence_name,
+#             sequence_type=sequence_type,
+#             genes=genes,
+#             proteins=proteins,
+#             resistance_data=resistance_data,
+#             recommendations=recommendations,
+#             summary_report=summary_report,
+#             num_genes=len(genes),
+#             num_resistance_markers=len(resistance_data)
+#         )
+        
+#         session.add(result)
+#         session.commit()
+#         # Get the ID of the newly committed row
+#         session.flush()
+#         session.refresh(result)
+#         # Need to explicitly convert to Python int to satisfy type checker
+#         return int(str(result.id))
+    
+#     except Exception as e:
+#         session.rollback()
+#         raise e
+    
+#     finally:
+#         session.close()
+
+# def get_analysis_result(result_id: int) -> Optional[Dict[str, Any]]:
+#     """
+#     Get analysis result by ID.
+    
+#     Args:
+#         result_id: ID of the analysis result
+        
+#     Returns:
+#         Dictionary with the analysis result, or None if not found
+#     """
+#     session = Session()
+    
+#     try:
+#         result = session.query(AnalysisResult).filter(AnalysisResult.id == result_id).first()
+#         return result.to_dict() if result else None
+    
+#     finally:
+#         session.close()
+
+# def get_analysis_history(limit: int = 10) -> List[Dict[str, Any]]:
+#     """
+#     Get analysis history.
+    
+#     Args:
+#         limit: Maximum number of records to return
+        
+#     Returns:
+#         List of analysis result dictionaries
+#     """
+#     session = Session()
+    
+#     try:
+#         results = session.query(AnalysisResult).order_by(
+#             AnalysisResult.created_at.desc()
+#         ).limit(limit).all()
+        
+#         return [result.to_dict() for result in results]
+    
+#     finally:
+#         session.close()
+
+# def save_sequence_data(
+#     name: str,
+#     data_type: str,
+#     sequence: str,
+#     description: Optional[str] = None
+# ) -> int:
+#     """
+#     Save sequence data to the database.
+    
+#     Args:
+#         name: Name of the sequence
+#         data_type: Type of data ('fasta' or 'raw')
+#         sequence: The sequence data
+#         description: Optional description
+        
+#     Returns:
+#         ID of the created record
+#     """
+#     session = Session()
+    
+#     try:
+#         data = SequenceData(
+#             name=name,
+#             data_type=data_type,
+#             sequence=sequence,
+#             description=description
+#         )
+        
+#         session.add(data)
+#         session.commit()
+#         # Get the ID of the newly committed row
+#         session.flush()
+#         session.refresh(data)
+#         # Need to explicitly convert to Python int to satisfy type checker
+#         return int(str(data.id))
+    
+#     except Exception as e:
+#         session.rollback()
+#         raise e
+    
+#     finally:
+#         session.close()
+
+# def get_sequence_data(data_id: int) -> Optional[Dict[str, Any]]:
+#     """
+#     Get sequence data by ID.
+    
+#     Args:
+#         data_id: ID of the sequence data
+        
+#     Returns:
+#         Dictionary with the sequence data, or None if not found
+#     """
+#     session = Session()
+    
+#     try:
+#         data = session.query(SequenceData).filter(SequenceData.id == data_id).first()
+#         return data.to_dict() if data else None
+    
+#     finally:
+#         session.close()
+
+# def get_stored_sequences(limit: int = 10) -> List[Dict[str, Any]]:
+#     """
+#     Get stored sequences.
+    
+#     Args:
+#         limit: Maximum number of records to return
+        
+#     Returns:
+#         List of sequence data dictionaries
+#     """
+#     session = Session()
+    
+#     try:
+#         sequences = session.query(SequenceData).order_by(
+#             SequenceData.created_at.desc()
+#         ).limit(limit).all()
+        
+#         return [sequence.to_dict() for sequence in sequences]
+    
+#     finally:
+#         session.close()
+
+# # Create tables on module import
+# try:
+#     create_tables()
+#     print("Database tables created successfully")
+# except Exception as e:
+#     print(f"Error creating database tables: {e}")
+
 """
 Database module for GeneHack AMR - handles database connections and operations.
 """
-
 import os
 import json
 import datetime
+import time
 from typing import Dict, List, Any, Optional
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
@@ -19,6 +288,9 @@ engine = sa.create_engine(DATABASE_URL if DATABASE_URL else "sqlite:///genehack.
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
+# Determine if we're using PostgreSQL or SQLite
+using_postgres = DATABASE_URL and DATABASE_URL.startswith("postgresql")
+
 class AnalysisResult(Base):
     """Model for storing analysis results."""
     __tablename__ = 'analysis_results'
@@ -28,11 +300,18 @@ class AnalysisResult(Base):
     sequence_name = sa.Column(sa.String(255))
     sequence_type = sa.Column(sa.String(50))  # 'fasta' or 'raw'
     
-    # Store detailed results as JSON
-    genes = sa.Column(JSONB)
-    proteins = sa.Column(JSONB)
-    resistance_data = sa.Column(JSONB)
-    recommendations = sa.Column(JSONB)
+    # Store detailed results as JSON - use JSONB for PostgreSQL, JSON for SQLite
+    if using_postgres:
+        genes = sa.Column(JSONB)
+        proteins = sa.Column(JSONB)
+        resistance_data = sa.Column(JSONB)
+        recommendations = sa.Column(JSONB)
+    else:
+        genes = sa.Column(sa.JSON)
+        proteins = sa.Column(sa.JSON)
+        resistance_data = sa.Column(sa.JSON)
+        recommendations = sa.Column(sa.JSON)
+        
     summary_report = sa.Column(sa.Text)
     
     # Metrics
@@ -78,8 +357,19 @@ class SequenceData(Base):
         }
 
 def create_tables():
-    """Create database tables."""
-    Base.metadata.create_all(engine)
+    """Create database tables with retry logic."""
+    retry_count = 3
+    for attempt in range(retry_count):
+        try:
+            Base.metadata.create_all(engine)
+            print("Database tables created successfully")
+            return True
+        except Exception as e:
+            if attempt == retry_count - 1:  # Last attempt
+                print(f"Error creating database tables after {retry_count} attempts: {e}")
+                raise
+            time.sleep(1)  # Wait before retrying
+    return False
 
 def save_analysis_result(
     sequence_name: str,
@@ -92,22 +382,13 @@ def save_analysis_result(
 ) -> int:
     """
     Save analysis results to the database.
-    
-    Args:
-        sequence_name: Name of the sequence
-        sequence_type: Type of sequence ('fasta' or 'raw')
-        genes: List of gene dictionaries
-        proteins: List of protein dictionaries
-        resistance_data: List of resistance data dictionaries
-        recommendations: List of recommendation dictionaries
-        summary_report: Summary report text
-        
-    Returns:
-        ID of the created record
     """
     session = Session()
     
     try:
+        # Ensure tables exist before saving
+        create_tables()
+        
         result = AnalysisResult(
             sequence_name=sequence_name,
             sequence_type=sequence_type,
@@ -122,10 +403,7 @@ def save_analysis_result(
         
         session.add(result)
         session.commit()
-        # Get the ID of the newly committed row
-        session.flush()
         session.refresh(result)
-        # Need to explicitly convert to Python int to satisfy type checker
         return int(str(result.id))
     
     except Exception as e:
@@ -138,16 +416,13 @@ def save_analysis_result(
 def get_analysis_result(result_id: int) -> Optional[Dict[str, Any]]:
     """
     Get analysis result by ID.
-    
-    Args:
-        result_id: ID of the analysis result
-        
-    Returns:
-        Dictionary with the analysis result, or None if not found
     """
     session = Session()
     
     try:
+        # Ensure tables exist before querying
+        create_tables()
+        
         result = session.query(AnalysisResult).filter(AnalysisResult.id == result_id).first()
         return result.to_dict() if result else None
     
@@ -157,21 +432,22 @@ def get_analysis_result(result_id: int) -> Optional[Dict[str, Any]]:
 def get_analysis_history(limit: int = 10) -> List[Dict[str, Any]]:
     """
     Get analysis history.
-    
-    Args:
-        limit: Maximum number of records to return
-        
-    Returns:
-        List of analysis result dictionaries
     """
     session = Session()
     
     try:
+        # Ensure tables exist before querying
+        create_tables()
+        
         results = session.query(AnalysisResult).order_by(
             AnalysisResult.created_at.desc()
         ).limit(limit).all()
         
         return [result.to_dict() for result in results]
+    
+    except Exception as e:
+        print(f"Error getting analysis history: {e}")
+        return []
     
     finally:
         session.close()
@@ -184,19 +460,13 @@ def save_sequence_data(
 ) -> int:
     """
     Save sequence data to the database.
-    
-    Args:
-        name: Name of the sequence
-        data_type: Type of data ('fasta' or 'raw')
-        sequence: The sequence data
-        description: Optional description
-        
-    Returns:
-        ID of the created record
     """
     session = Session()
     
     try:
+        # Ensure tables exist before saving
+        create_tables()
+        
         data = SequenceData(
             name=name,
             data_type=data_type,
@@ -206,10 +476,7 @@ def save_sequence_data(
         
         session.add(data)
         session.commit()
-        # Get the ID of the newly committed row
-        session.flush()
         session.refresh(data)
-        # Need to explicitly convert to Python int to satisfy type checker
         return int(str(data.id))
     
     except Exception as e:
@@ -222,16 +489,13 @@ def save_sequence_data(
 def get_sequence_data(data_id: int) -> Optional[Dict[str, Any]]:
     """
     Get sequence data by ID.
-    
-    Args:
-        data_id: ID of the sequence data
-        
-    Returns:
-        Dictionary with the sequence data, or None if not found
     """
     session = Session()
     
     try:
+        # Ensure tables exist before querying
+        create_tables()
+        
         data = session.query(SequenceData).filter(SequenceData.id == data_id).first()
         return data.to_dict() if data else None
     
@@ -241,28 +505,28 @@ def get_sequence_data(data_id: int) -> Optional[Dict[str, Any]]:
 def get_stored_sequences(limit: int = 10) -> List[Dict[str, Any]]:
     """
     Get stored sequences.
-    
-    Args:
-        limit: Maximum number of records to return
-        
-    Returns:
-        List of sequence data dictionaries
     """
     session = Session()
     
     try:
+        # Ensure tables exist before querying
+        create_tables()
+        
         sequences = session.query(SequenceData).order_by(
             SequenceData.created_at.desc()
         ).limit(limit).all()
         
         return [sequence.to_dict() for sequence in sequences]
     
+    except Exception as e:
+        print(f"Error getting stored sequences: {e}")
+        return []
+    
     finally:
         session.close()
 
-# Create tables on module import
+# Initialize database on import
 try:
     create_tables()
-    print("Database tables created successfully")
 except Exception as e:
-    print(f"Error creating database tables: {e}")
+    print(f"Initial database table creation failed: {e}")
