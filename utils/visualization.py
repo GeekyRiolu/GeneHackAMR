@@ -1,8 +1,10 @@
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 import random
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Tuple
+from collections import Counter
 
 def create_gene_visualization(genes: List[Dict[str, Any]]) -> go.Figure:
     """
