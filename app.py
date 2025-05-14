@@ -37,6 +37,94 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Add custom CSS for background, animations, and styling
+st.markdown("""
+<style>
+    .main {
+        background-color: #f8f9fa;
+        background-image: linear-gradient(120deg, rgba(240,249,255,0.8) 0%, rgba(249,255,246,0.8) 100%);
+    }
+    .stApp {
+        background-size: cover;
+    }
+    div.stButton > button {
+        background-color: #2E86C1;
+        color: white;
+        font-weight: bold;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: none;
+        transition: all 0.3s;
+    }
+    div.stButton > button:hover {
+        background-color: #1A5276;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .css-1v0mbdj.ebxwdo61 {
+        border-radius: 0.7rem;
+        padding: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .stAlert {
+        border-radius: 0.7rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #f0f3f4;
+        border-radius: 4px 4px 0 0;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #2E86C1;
+        color: white;
+    }
+    h1, h2, h3 {
+        color: #2C3E50;
+    }
+    .animate-charcter {
+        background-image: linear-gradient(
+            -225deg,
+            #231557 0%,
+            #44107a 29%,
+            #ff1361 67%,
+            #2E86C1 100%
+        );
+        background-size: auto auto;
+        background-clip: border-box;
+        background-size: 200% auto;
+        color: #fff;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: textclip 3s linear infinite;
+        display: inline;
+    }
+    @keyframes textclip {
+        to {
+            background-position: 200% center;
+        }
+    }
+    .loading-animation {
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(to right, #2E86C1, #2ECC71, #F4D03F);
+        background-size: 200% 100%;
+        animation: gradient-slide 2s linear infinite;
+    }
+    @keyframes gradient-slide {
+        0% {background-position: 100% 0%;}
+        100% {background-position: -100% 0%;}
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Function to load lottie files
 def load_lottieurl(url: str):
     """
@@ -54,13 +142,15 @@ def load_lottieurl(url: str):
 dna_animation = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_xh8zdnlk.json")
 bacteria_animation = load_lottieurl("https://assets2.lottiefiles.com/packages/lf20_ksyj8dkc.json")
 analysis_animation = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_1cazwtnc.json")
+laboratory_animation = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_wdqlqkhz.json")
+molecule_animation = load_lottieurl("https://assets4.lottiefiles.com/packages/lf20_ry2uhxse.json")
 
 # Create header with animation
 header_col1, header_col2 = st.columns([3, 1])
 
 with header_col1:
-    # Application title and description
-    st.title("🧬 GeneHack AMR")
+    # Application title and description with animated title
+    st.markdown('<h1 class="animate-charcter">🧬 GeneHack AMR</h1>', unsafe_allow_html=True)
     st.subheader("Antimicrobial Resistance Prediction from Genomic Data")
     
     st.markdown("""
@@ -68,6 +158,9 @@ with header_col1:
     translates them to proteins, and recommends effective antibiotics. Designed for researchers, healthcare 
     professionals, and bioinformatics experts.
     """)
+    
+    # Add loading animation bar
+    st.markdown('<div class="loading-animation"></div>', unsafe_allow_html=True)
 
 with header_col2:
     # DNA animation in the header
@@ -336,28 +429,42 @@ else:
     # Display instructions when no analysis has been done
     st.info("Please upload a FASTA file or enter a raw genetic sequence in the sidebar and click 'Analyze Sequence' to start.")
     
+    # Add molecule animation to the main page when not analyzing
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if molecule_animation:
+            st_lottie(molecule_animation, speed=1, height=300, key="molecule_animation")
+    
     # Example/demo section
     with st.expander("How to use GeneHack AMR"):
-        st.markdown("""
-        ### How to use this tool:
+        # Split content into columns
+        demo_col1, demo_col2 = st.columns([3, 2])
         
-        1. **Input your genetic sequence** using one of two methods:
-           - Upload a FASTA file (.fasta, .fa, .fna, .ffn, or .txt)
-           - Paste a raw nucleotide sequence directly
-        
-        2. **Click 'Analyze Sequence'** to process the data
-        
-        3. **View the results** across different tabs:
-           - Predicted AMR Genes
-           - Protein Sequences
-           - Resistance Analysis
-           - Antibiotic Recommendations
-        
-        ### What GeneHack AMR does:
-        
-        - **Gene Prediction**: Identifies genes linked to antimicrobial resistance
-        - **Protein Translation**: Converts genes to protein sequences
-        - **Resistance Analysis**: Analyzes which antibiotics might be ineffective
-        - **Recommendations**: Suggests which antibiotics might still be effective
-        - **Visualization**: Provides interactive plots to understand the results
-        """)
+        with demo_col1:
+            st.markdown("""
+            ### How to use this tool:
+            
+            1. **Input your genetic sequence** using one of two methods:
+               - Upload a FASTA file (.fasta, .fa, .fna, .ffn, or .txt)
+               - Paste a raw nucleotide sequence directly
+            
+            2. **Click 'Analyze Sequence'** to process the data
+            
+            3. **View the results** across different tabs:
+               - Predicted AMR Genes
+               - Protein Sequences
+               - Resistance Analysis
+               - Antibiotic Recommendations
+            
+            ### What GeneHack AMR does:
+            
+            - **Gene Prediction**: Identifies genes linked to antimicrobial resistance
+            - **Protein Translation**: Converts genes to protein sequences
+            - **Resistance Analysis**: Analyzes which antibiotics might be ineffective
+            - **Recommendations**: Suggests which antibiotics might still be effective
+            - **Visualization**: Provides interactive plots to understand the results
+            """)
+            
+        with demo_col2:
+            if laboratory_animation:
+                st_lottie(laboratory_animation, speed=1, height=300, key="lab_animation")
