@@ -28,6 +28,14 @@ from utils.visualization import (
 )
 from utils.openai_helper import generate_summary_report
 from utils.protein_3d import render_protein_3d, create_interactive_protein_view, display_loading_animation
+from data.database import (
+    save_analysis_result,
+    get_analysis_result,
+    get_analysis_history,
+    save_sequence_data,
+    get_sequence_data,
+    get_stored_sequences
+)
 
 # Set page configuration
 st.set_page_config(
