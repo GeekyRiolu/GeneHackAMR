@@ -27,6 +27,7 @@ from utils.visualization import (
     create_protein_domain_plot
 )
 from utils.openai_helper import generate_summary_report
+from utils.protein_3d import render_protein_3d, create_interactive_protein_view, display_loading_animation
 
 # Set page configuration
 st.set_page_config(
@@ -112,82 +113,94 @@ with st.sidebar:
     analyze_button = st.button("Analyze Sequence", type="primary")
     
     if analyze_button and sequence_data:
-        with st.spinner("Analyzing sequence..."):
-            try:
-                # Validate and parse the sequence
-                if input_method == "FASTA File":
-                    sequences = parse_fasta(sequence_data)
-                    if not sequences:
-                        st.error("No valid sequences found in the FASTA file.")
-                        st.stop()
-                else:
-                    # For raw input, create a single sequence entry
-                    if validate_sequence(sequence_data):
-                        sequences = [("Raw_Input_Sequence", sequence_data.strip().upper())]
-                    else:
-                        st.error("Invalid nucleotide sequence. Please use only A, T, G, C characters.")
-                        st.stop()
-                
-                # Process all sequences
-                all_genes = []
-                all_proteins = []
-                all_resistance = []
-                
-                for seq_name, seq in sequences:
-                    # Predict AMR genes
-                    genes = predict_amr_genes(seq)
-                    if genes:
-                        for gene in genes:
-                            gene['sequence_name'] = seq_name
-                            all_genes.append(gene)
-                            
-                            # Translate gene to protein
-                            protein = translate_to_protein(gene['sequence'])
-                            protein_info = {
-                                'gene_id': gene['id'],
-                                'gene_name': gene['name'],
-                                'sequence_name': seq_name,
-                                'protein_sequence': protein
-                            }
-                            all_proteins.append(protein_info)
-                            
-                            # Analyze protein for resistance
-                            resistance_info = analyze_protein_resistance(protein, gene['name'])
-                            if resistance_info:
-                                for info in resistance_info:
-                                    info['gene_id'] = gene['id']
-                                    info['gene_name'] = gene['name']
-                                    info['sequence_name'] = seq_name
-                                    all_resistance.append(info)
-                
-                if not all_genes:
-                    st.warning("No AMR genes detected in the provided sequence(s).")
-                    st.session_state.analyzed = False
+        # Show loading animation before analysis
+        progress_placeholder = st.empty()
+        with progress_placeholder.container():
+            if analysis_animation:
+                st_lottie(analysis_animation, speed=1, height=200, key="analysis_animation")
+            st.info("Analyzing your genetic sequence. This may take a moment...")
+            
+        try:
+            # Validate and parse the sequence
+            if input_method == "FASTA File":
+                sequences = parse_fasta(sequence_data)
+                if not sequences:
+                    st.error("No valid sequences found in the FASTA file.")
                     st.stop()
+            else:
+                # For raw input, create a single sequence entry
+                if validate_sequence(sequence_data):
+                    sequences = [("Raw_Input_Sequence", sequence_data.strip().upper())]
+                else:
+                    st.error("Invalid nucleotide sequence. Please use only A, T, G, C characters.")
+                    st.stop()
+            
+            # Add a small delay to show the animation
+            time.sleep(1.5)
+            
+            # Clear the animation after loading is done
+            progress_placeholder.empty()
+            
+            # Process all sequences
+            all_genes = []
+            all_proteins = []
+            all_resistance = []
+            
+            for seq_name, seq in sequences:
+                # Predict AMR genes
+                genes = predict_amr_genes(seq)
+                if genes:
+                    for gene in genes:
+                        gene['sequence_name'] = seq_name
+                        all_genes.append(gene)
+                        
+                        # Translate gene to protein
+                        protein = translate_to_protein(gene['sequence'])
+                        protein_info = {
+                            'gene_id': gene['id'],
+                            'gene_name': gene['name'],
+                            'sequence_name': seq_name,
+                            'protein_sequence': protein
+                        }
+                        all_proteins.append(protein_info)
+                        
+                        # Analyze protein for resistance
+                        resistance_info = analyze_protein_resistance(protein, gene['name'])
+                        if resistance_info:
+                            for info in resistance_info:
+                                info['gene_id'] = gene['id']
+                                info['gene_name'] = gene['name']
+                                info['sequence_name'] = seq_name
+                                all_resistance.append(info)
                 
-                # Get antibiotic recommendations
-                recommendations = get_antibiotic_recommendations(all_resistance)
-                
-                # Generate summary report with OpenAI
-                summary_data = {
-                    'genes': all_genes,
-                    'resistance': all_resistance,
-                    'recommendations': recommendations
-                }
-                summary_report = generate_summary_report(summary_data)
-                
-                # Update session state
-                st.session_state.genes = all_genes
-                st.session_state.proteins = all_proteins
-                st.session_state.resistance_data = all_resistance
-                st.session_state.recommendations = recommendations
-                st.session_state.summary_report = summary_report
-                st.session_state.analyzed = True
-                
-                st.success("Analysis complete!")
-            except Exception as e:
-                st.error(f"An error occurred during analysis: {str(e)}")
+            if not all_genes:
+                st.warning("No AMR genes detected in the provided sequence(s).")
                 st.session_state.analyzed = False
+                st.stop()
+            
+            # Get antibiotic recommendations
+            recommendations = get_antibiotic_recommendations(all_resistance)
+            
+            # Generate summary report with OpenAI
+            summary_data = {
+                'genes': all_genes,
+                'resistance': all_resistance,
+                'recommendations': recommendations
+            }
+            summary_report = generate_summary_report(summary_data)
+            
+            # Update session state
+            st.session_state.genes = all_genes
+            st.session_state.proteins = all_proteins
+            st.session_state.resistance_data = all_resistance
+            st.session_state.recommendations = recommendations
+            st.session_state.summary_report = summary_report
+            st.session_state.analyzed = True
+            
+            st.success("Analysis complete!")
+        except Exception as e:
+            st.error(f"An error occurred during analysis: {str(e)}")
+            st.session_state.analyzed = False
 
 # Main content area
 if st.session_state.analyzed:
@@ -220,15 +233,31 @@ if st.session_state.analyzed:
             # Display protein sequences
             for i, protein in enumerate(st.session_state.proteins):
                 with st.expander(f"Protein for gene {protein['gene_name']} ({protein['gene_id']})"):
-                    st.markdown(f"**Sequence Name:** {protein['sequence_name']}")
-                    st.markdown(f"**Gene Name:** {protein['gene_name']}")
-                    st.markdown(f"**Gene ID:** {protein['gene_id']}")
-                    st.text_area(f"Protein Sequence {i+1}", protein['protein_sequence'], height=150)
+                    # Create two columns for protein info and 3D structure
+                    col1, col2 = st.columns([1, 1])
+                    
+                    with col1:
+                        st.markdown(f"**Sequence Name:** {protein['sequence_name']}")
+                        st.markdown(f"**Gene Name:** {protein['gene_name']}")
+                        st.markdown(f"**Gene ID:** {protein['gene_id']}")
+                        st.text_area(f"Protein Sequence {i+1}", protein['protein_sequence'], height=150)
+                    
+                    with col2:
+                        # Add 3D protein visualization
+                        st.subheader("3D Protein Structure")
+                        render_protein_3d(protein['gene_name'])
+                        st.caption("Drag to rotate, scroll to zoom")
             
             # Protein domain visualization
             st.subheader("Protein Domain Analysis")
             protein_plot = create_protein_domain_plot(st.session_state.proteins)
             st.plotly_chart(protein_plot, use_container_width=True)
+            
+            # Add full 3D interactive view for the first protein
+            if st.session_state.proteins:
+                st.subheader("Interactive 3D Protein Analysis")
+                st.info("Showing detailed 3D visualization and amino acid composition")
+                create_interactive_protein_view(st.session_state.proteins[0])
         else:
             st.info("No protein sequences were generated.")
     
