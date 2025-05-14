@@ -372,41 +372,52 @@ if st.session_state.analyzed:
     # Summary section
     st.header("Analysis Summary")
     
-    # Add Save Results button if results haven't been saved yet
-    if not st.session_state.result_saved:
-        save_col1, save_col2 = st.columns([3, 1])
-        with save_col1:
+    # Save Results button/section
+    save_col1, save_col2 = st.columns([3, 1])
+    with save_col1:
+        if not st.session_state.result_saved:
             sequence_name = st.text_input("Sequence Name for Saving", 
                                          value=st.session_state.current_sequence_name if st.session_state.current_sequence_name else "My Sequence")
-        with save_col2:
+        else:
+            st.info(f"Saved as: {st.session_state.current_sequence_name} ✓")
+    with save_col2:
+        if not st.session_state.result_saved:
             save_button = st.button("Save Results", type="primary")
-        
-        # Handle save button click
-        if save_button:
-            # Check for required data
-            if not st.session_state.genes or not st.session_state.proteins:
-                st.error("Missing analysis data. Cannot save incomplete results.")
-            else:
-                try:
-                    # Save analysis result to database
-                    result_id = save_analysis_result(
-                        sequence_name=sequence_name,
-                        sequence_type=st.session_state.current_sequence_type or "raw",
-                        genes=st.session_state.genes,
-                        proteins=st.session_state.proteins,
-                        resistance_data=st.session_state.resistance_data,
-                        recommendations=st.session_state.recommendations,
-                        summary_report=st.session_state.summary_report
-                    )
-                    
-                    # Update session state
-                    st.session_state.result_saved = True
-                    st.session_state.current_sequence_name = sequence_name
-                    
-                    # Show success message
-                    st.success(f"Results saved successfully! ID: {result_id}")
-                except Exception as e:
-                    st.error(f"Error saving results: {str(e)}")
+        else:
+            st.success("Saved to Database")
+    
+    # Handle save button click
+    if not st.session_state.result_saved and 'save_button' in locals() and save_button:
+        # Check for required data
+        if not st.session_state.genes or not st.session_state.proteins:
+            st.error("Missing analysis data. Cannot save incomplete results.")
+        else:
+            try:
+                # Make sure summary report is not None
+                summary_report = st.session_state.summary_report or ""
+                
+                # Save analysis result to database
+                result_id = save_analysis_result(
+                    sequence_name=sequence_name,
+                    sequence_type=st.session_state.current_sequence_type or "raw",
+                    genes=st.session_state.genes,
+                    proteins=st.session_state.proteins,
+                    resistance_data=st.session_state.resistance_data,
+                    recommendations=st.session_state.recommendations,
+                    summary_report=summary_report
+                )
+                
+                # Update session state
+                st.session_state.result_saved = True
+                st.session_state.current_sequence_name = sequence_name
+                
+                # Show success message
+                st.success(f"Results saved successfully! ID: {result_id}")
+                
+                # Refresh the page to update the UI
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error saving results: {str(e)}")
     
     # Display summary report
     st.markdown(st.session_state.summary_report)

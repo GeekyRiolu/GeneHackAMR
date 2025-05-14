@@ -84,11 +84,11 @@ def create_tables():
 def save_analysis_result(
     sequence_name: str,
     sequence_type: str,
-    genes: List[Dict[str, Any]],
-    proteins: List[Dict[str, Any]],
-    resistance_data: List[Dict[str, Any]],
-    recommendations: List[Dict[str, Any]],
-    summary_report: str
+    genes: Any,
+    proteins: Any,
+    resistance_data: Any,
+    recommendations: Any,
+    summary_report: Any
 ) -> int:
     """
     Save analysis results to the database.
@@ -122,9 +122,9 @@ def save_analysis_result(
         
         session.add(result)
         session.commit()
-        # Get the id of the newly committed row
-        result_id = result.id
-        return result_id
+        # Get the id of the newly committed row and convert to Python int
+        session.refresh(result)
+        return result.id
     
     except Exception as e:
         session.rollback()
@@ -205,8 +205,8 @@ def save_sequence_data(
         session.add(data)
         session.commit()
         # Get the id of the newly committed row
-        data_id = data.id
-        return data_id
+        session.refresh(data)
+        return data.id
     
     except Exception as e:
         session.rollback()
