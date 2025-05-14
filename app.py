@@ -29,10 +29,11 @@ from utils.visualization import (
 from utils.openai_helper import generate_summary_report
 from utils.protein_3d import render_protein_3d, create_interactive_protein_view, display_loading_animation
 from data.database import (
-    save_analysis_result,
-    get_analysis_result,
-    get_analysis_history,
-    save_sequence_data,
+    create_tables, 
+    save_analysis_result, 
+    save_sequence_data, 
+    get_analysis_result, 
+    get_analysis_history, 
     get_sequence_data,
     get_stored_sequences
 )
@@ -44,6 +45,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Initialize database tables
+try:
+    create_tables()
+except Exception as e:
+    st.error(f"Error creating database tables: {str(e)}")
 
 # Add custom CSS for background, animations, and styling
 st.markdown("""
@@ -208,20 +215,55 @@ with st.sidebar:
     # Add tabs to sidebar for input, history, and settings
     sidebar_tab1, sidebar_tab2 = st.tabs(["New Analysis", "History"])
     
-    with sidebar_tab1:
-        input_method = st.radio("Select Input Method:", ["FASTA File", "Raw Sequence"])
-    
     # Define sequence_data as None initially
     sequence_data = None
+    input_method = "FASTA File"  # Default
     
-    if input_method == "FASTA File":
-        uploaded_file = st.file_uploader("Upload FASTA file", type=["fasta", "fa", "fna", "ffn", "txt"])
-        if uploaded_file is not None:
-            sequence_data = uploaded_file.getvalue().decode("utf-8")
-            st.success("File uploaded successfully!")
-    else:
-        sequence_data = st.text_area("Enter raw nucleotide sequence:", height=200, 
-                                     help="Paste your DNA sequence here (A, T, G, C bases only)")
+    with sidebar_tab1:
+        input_method = st.radio("Select Input Method:", ["FASTA File", "Raw Sequence"])
+        
+        if input_method == "FASTA File":
+            uploaded_file = st.file_uploader("Upload FASTA file", type=["fasta", "fa", "fna", "ffn", "txt"])
+            if uploaded_file is not None:
+                sequence_data = uploaded_file.getvalue().decode("utf-8")
+                st.success("File uploaded successfully!")
+        else:
+            sequence_data = st.text_area("Enter raw nucleotide sequence:", height=200, 
+                                         help="Paste your DNA sequence here (A, T, G, C bases only)")
+    
+    with sidebar_tab2:
+        st.subheader("Analysis History")
+        
+        # Fetch analysis history from the database
+        try:
+            history = get_analysis_history(limit=10)
+            if history:
+                for i, result in enumerate(history):
+                    with st.expander(f"{result['sequence_name']} - {result['created_at'][:16].replace('T', ' ')}"):
+                        st.write(f"**Genes found:** {result['num_genes']}")
+                        st.write(f"**Resistance markers:** {result['num_resistance_markers']}")
+                        
+                        # Add button to load this analysis
+                        if st.button(f"Load Analysis #{result['id']}", key=f"load_{i}"):
+                            # Load the analysis data into session state
+                            st.session_state.genes = result['genes']
+                            st.session_state.proteins = result['proteins']
+                            st.session_state.resistance_data = result['resistance_data']
+                            st.session_state.recommendations = result['recommendations']
+                            st.session_state.summary_report = result['summary_report']
+                            st.session_state.analyzed = True
+                            st.session_state.result_saved = True
+                            st.session_state.current_sequence_name = result['sequence_name']
+                            st.session_state.current_sequence_type = result['sequence_type']
+                            
+                            # Notify user
+                            st.success(f"Loaded analysis #{result['id']}")
+                            # Force a rerun to show the analysis results
+                            st.rerun()
+            else:
+                st.info("No analysis history found. Run your first analysis to save results.")
+        except Exception as e:
+            st.error(f"Error loading analysis history: {str(e)}")
     
     analyze_button = st.button("Analyze Sequence", type="primary")
     
@@ -309,6 +351,16 @@ with st.sidebar:
             st.session_state.recommendations = recommendations
             st.session_state.summary_report = summary_report
             st.session_state.analyzed = True
+            st.session_state.result_saved = False
+            
+            # Set sequence name and type in session state for later saving
+            if input_method == "FASTA File" and sequences:
+                # Use the first sequence name from the FASTA file
+                st.session_state.current_sequence_name = sequences[0][0]
+                st.session_state.current_sequence_type = "fasta"
+            else:
+                st.session_state.current_sequence_name = "Raw_Sequence"
+                st.session_state.current_sequence_type = "raw"
             
             st.success("Analysis complete!")
         except Exception as e:
@@ -319,6 +371,44 @@ with st.sidebar:
 if st.session_state.analyzed:
     # Summary section
     st.header("Analysis Summary")
+    
+    # Add Save Results button if results haven't been saved yet
+    if not st.session_state.result_saved:
+        save_col1, save_col2 = st.columns([3, 1])
+        with save_col1:
+            sequence_name = st.text_input("Sequence Name for Saving", 
+                                         value=st.session_state.current_sequence_name if st.session_state.current_sequence_name else "My Sequence")
+        with save_col2:
+            save_button = st.button("Save Results", type="primary")
+        
+        # Handle save button click
+        if save_button:
+            # Check for required data
+            if not st.session_state.genes or not st.session_state.proteins:
+                st.error("Missing analysis data. Cannot save incomplete results.")
+            else:
+                try:
+                    # Save analysis result to database
+                    result_id = save_analysis_result(
+                        sequence_name=sequence_name,
+                        sequence_type=st.session_state.current_sequence_type or "raw",
+                        genes=st.session_state.genes,
+                        proteins=st.session_state.proteins,
+                        resistance_data=st.session_state.resistance_data,
+                        recommendations=st.session_state.recommendations,
+                        summary_report=st.session_state.summary_report
+                    )
+                    
+                    # Update session state
+                    st.session_state.result_saved = True
+                    st.session_state.current_sequence_name = sequence_name
+                    
+                    # Show success message
+                    st.success(f"Results saved successfully! ID: {result_id}")
+                except Exception as e:
+                    st.error(f"Error saving results: {str(e)}")
+    
+    # Display summary report
     st.markdown(st.session_state.summary_report)
     
     # Create tabs for different result sections
