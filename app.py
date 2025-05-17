@@ -87,33 +87,115 @@ if 'current_sequence' not in st.session_state:
 if 'use_blast_search' not in st.session_state:
     st.session_state.use_blast_search = True
 
-# Custom CSS
+# Custom CSS with medical theme
 st.markdown("""
 <style>
+    /* Main Background styling */
+    section[data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+    }
+    
+    [data-testid="stAppViewBlockContainer"] {
+        background-color: #ffffff;
+        background-image: 
+            linear-gradient(135deg, rgba(210, 235, 255, 0.1) 25%, transparent 25%),
+            linear-gradient(225deg, rgba(210, 235, 255, 0.1) 25%, transparent 25%),
+            linear-gradient(45deg, rgba(210, 235, 255, 0.1) 25%, transparent 25%),
+            linear-gradient(315deg, rgba(210, 235, 255, 0.1) 25%, transparent 25%);
+        background-position: 40px 0, 40px 0, 0 0, 0 0;
+        background-size: 80px 80px;
+        background-repeat: repeat;
+    }
+    
+    /* Headers */
     .main-header {
         font-size: 2.5rem;
-        color: #4f8bf9;
+        color: #1976d2;
         margin-bottom: 1rem;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
     .sub-header {
         font-size: 1.5rem;
-        color: #6c757d;
+        color: #0d47a1;
         margin-bottom: 1rem;
+        font-weight: 400;
     }
+    
+    /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 4px;
     }
     .stTabs [data-baseweb="tab"] {
         height: 50px;
         white-space: pre-wrap;
         background-color: #f8f9fa;
-        border-radius: 4px 4px 0px 0px;
+        border-radius: 8px 8px 0px 0px;
         gap: 1px;
         padding: 10px 16px;
+        font-weight: 500;
+        border: 1px solid #e9ecef;
+        border-bottom: none;
+        transition: all 0.3s ease;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #4f8bf9;
+        background-color: #1976d2;
         color: white;
+        border-color: #1976d2;
+        transform: translateY(-4px);
+    }
+    
+    /* Cards for content */
+    .stCard {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    /* Button styling */
+    .stButton button {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .stButton button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Metrics styling */
+    [data-testid="stMetric"] {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    /* Dataframe styling */
+    .dataframe {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e9ecef;
+    }
+    .dataframe th {
+        background-color: #1976d2;
+        color: white;
+        font-weight: 500;
+    }
+    
+    /* Info/warning boxes */
+    .stAlert {
+        border-radius: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -508,12 +590,17 @@ if st.session_state.has_analysis:
     st.markdown(st.session_state.summary_report)
     
     # Create tabs for different result sections
-    if st.session_state.use_blast_search:
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Predicted Genes", "Protein Sequences", "Resistance Analysis", "Antibiotic Recommendations", "BLAST Results"])
-    else:
-        tab1, tab2, tab3, tab4 = st.tabs(["Predicted Genes", "Protein Sequences", "Resistance Analysis", "Antibiotic Recommendations"])
+    tabs = ["Predicted Genes", "Protein Sequences", "Resistance Analysis", "Antibiotic Recommendations"]
     
-    with tab1:
+    # Add BLAST results tab if using BLAST search
+    if st.session_state.use_blast_search:
+        tabs.append("BLAST Results")
+    
+    # Create the tabs dynamically
+    all_tabs = st.tabs(tabs)
+    
+    # Tab 0: Predicted Genes
+    with all_tabs[0]:
         st.header("Predicted AMR Genes")
         
         if st.session_state.genes:
@@ -528,7 +615,8 @@ if st.session_state.has_analysis:
         else:
             st.info("No AMR genes were detected in the sequence.")
     
-    with tab2:
+    # Tab 1: Protein Sequences
+    with all_tabs[1]:
         st.header("Protein Sequences")
         
         if st.session_state.proteins:
@@ -563,7 +651,8 @@ if st.session_state.has_analysis:
         else:
             st.info("No protein sequences were generated.")
     
-    with tab3:
+    # Tab 2: Resistance Analysis
+    with all_tabs[2]:
         st.header("Resistance Analysis")
         
         if st.session_state.resistance_data:
@@ -591,7 +680,8 @@ if st.session_state.has_analysis:
         else:
             st.info("No resistance data was generated.")
     
-    with tab4:
+    # Tab 3: Antibiotic Recommendations
+    with all_tabs[3]:
         st.header("Antibiotic Recommendations")
         
         if st.session_state.recommendations:
@@ -648,9 +738,9 @@ if st.session_state.has_analysis:
         else:
             st.info("No antibiotic recommendations were generated.")
     
-    # Display BLAST results tab if BLAST search was used
-    if st.session_state.use_blast_search and 'tab5' in locals():
-        with tab5:
+    # Tab 4: BLAST Results (only shown if using BLAST search)
+    if st.session_state.use_blast_search and len(all_tabs) > 4:
+        with all_tabs[4]:
             st.header("BLAST Search Results")
             
             if st.session_state.blast_results:
