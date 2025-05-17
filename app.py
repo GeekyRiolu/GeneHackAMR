@@ -126,8 +126,19 @@ with st.sidebar:
     
     # Input section
     st.subheader("Sequence Input")
+    st.markdown("Input bacterial genome sequence for antimicrobial resistance analysis")
     input_method = st.radio("Select input method", 
                             ["Upload FASTA File", "Enter Raw Sequence", "Load Saved Sequence"])
+    
+    # Analysis options
+    with st.expander("Analysis Options", expanded=True):
+        use_blast = st.checkbox("Use BLAST for resistance gene detection", 
+                               value=st.session_state.use_blast_search,
+                               help="Use BLAST to search for resistance genes against known AMR databases")
+        st.session_state.use_blast_search = use_blast
+        
+        if use_blast:
+            st.info("BLAST search will provide more accurate resistance gene identification and antibiotic effectiveness predictions.")
     
     # Initialize sequence variable
     sequence = ""
@@ -214,55 +225,143 @@ with st.sidebar:
         st.session_state.has_analysis = False
         st.session_state.result_saved = False
         
+        # Save current sequence for later use
+        st.session_state.current_sequence = sequence
+        
         # Show progress
-        with st.spinner("Analyzing genetic sequence..."):
-            # 1. Predict AMR genes
-            st.session_state.genes = predict_amr_genes(
-                sequence=sequence,
-                sequence_name=st.session_state.current_sequence_name
-            )
-            
-            # 2. Generate protein sequences
-            st.session_state.proteins = []
-            for gene in st.session_state.genes:
-                # Extract gene sequence
-                gene_seq = sequence[gene['start_pos']:gene['end_pos']]
-                
-                # Translate to protein
-                protein_seq = translate_to_protein(gene_seq)
-                
-                # Store protein data
-                st.session_state.proteins.append({
-                    'sequence_name': gene['sequence_name'],
-                    'gene_id': gene['id'],
-                    'gene_name': gene['name'],
-                    'protein_sequence': protein_seq,
-                    'length': len(protein_seq),
-                    'domains': gene.get('domains', []),
-                    'functions': gene.get('functions', [])
-                })
-            
-            # 3. Analyze resistance
-            st.session_state.resistance_data = []
-            for protein in st.session_state.proteins:
-                # Analyze protein for resistance markers
-                resistance_results = analyze_protein_resistance(
-                    protein['protein_sequence'], 
-                    protein['gene_name']
+        with st.spinner("Analyzing bacterial genome for resistance genes..."):
+            if st.session_state.use_blast_search:
+                # Approach 1: Use BLAST search for more accurate results
+                with st.status("Running BLAST search against AMR databases...", expanded=True) as status:
+                    st.write("Searching for resistance genes...")
+                    
+                    # Run BLAST search
+                    blast_results = search_amr_database(
+                        sequence=sequence,
+                        sequence_name=st.session_state.current_sequence_name
+                    )
+                    
+                    # Store BLAST results
+                    st.session_state.blast_results = blast_results
+                    
+                    # Convert BLAST hits to gene predictions
+                    st.session_state.genes = []
+                    gene_id = 1
+                    
+                    for hit in blast_results.get('all_hits', []):
+                        gene_name = hit['title'].split()[0]  # First word of hit title
+                        st.session_state.genes.append({
+                            'id': f"BLAST_{gene_id}",
+                            'name': gene_name,
+                            'sequence_name': st.session_state.current_sequence_name,
+                            'start_pos': hit['query_start'],
+                            'end_pos': hit['query_end'],
+                            'confidence': hit['identity'],
+                            'description': hit['title'],
+                            'e_value': hit['e_value']
+                        })
+                        gene_id += 1
+                    
+                    # Extract resistance data from BLAST results
+                    st.session_state.resistance_data = []
+                    
+                    for class_name, hits in blast_results.get('hits_by_class', {}).items():
+                        for hit in hits:
+                            antibiotic_class = class_name.replace('_', ' ').title()
+                            st.session_state.resistance_data.append({
+                                'sequence_name': st.session_state.current_sequence_name,
+                                'gene_name': hit['title'].split()[0],
+                                'gene_id': hit['accession'],
+                                'antibiotic': antibiotic_class,
+                                'resistance_level': 'High' if hit['identity'] > 0.9 else 'Moderate' if hit['identity'] > 0.8 else 'Low',
+                                'mechanism': 'Unknown' if 'mechanism' not in hit else hit['mechanism'],
+                                'confidence': hit['identity']
+                            })
+                    
+                    # Set recommendations from BLAST results
+                    st.session_state.recommendations = []
+                    
+                    for antibiotic, data in blast_results.get('antibiotic_effectiveness', {}).items():
+                        st.session_state.recommendations.append({
+                            'antibiotic': antibiotic,
+                            'effective': data['effective'],
+                            'confidence': data['confidence'],
+                            'rationale': data['rationale']
+                        })
+                    
+                    # Generate protein sequences from genes
+                    st.session_state.proteins = []
+                    for gene in st.session_state.genes:
+                        # Extract gene sequence if we have position info
+                        if 'start_pos' in gene and 'end_pos' in gene:
+                            start = max(0, gene['start_pos'] - 1)  # 1-based to 0-based
+                            end = min(len(sequence), gene['end_pos'])
+                            gene_seq = sequence[start:end]
+                            
+                            # Translate to protein
+                            protein_seq = translate_to_protein(gene_seq)
+                            
+                            # Store protein data
+                            st.session_state.proteins.append({
+                                'sequence_name': gene['sequence_name'],
+                                'gene_id': gene['id'],
+                                'gene_name': gene['name'],
+                                'protein_sequence': protein_seq,
+                                'length': len(protein_seq),
+                                'domains': gene.get('domains', []),
+                                'functions': gene.get('functions', [])
+                            })
+                    
+                    status.update(label="BLAST search complete", state="complete", expanded=False)
+            else:
+                # Approach 2: Use built-in prediction methods (fallback)
+                # 1. Predict AMR genes
+                st.session_state.genes = predict_amr_genes(
+                    sequence=sequence,
+                    sequence_name=st.session_state.current_sequence_name
                 )
                 
-                # Add sequence name to resistance data
-                for r in resistance_results:
-                    r['sequence_name'] = protein['sequence_name']
-                    r['gene_id'] = protein['gene_id']
+                # 2. Generate protein sequences
+                st.session_state.proteins = []
+                for gene in st.session_state.genes:
+                    # Extract gene sequence
+                    gene_seq = sequence[gene['start_pos']:gene['end_pos']]
+                    
+                    # Translate to protein
+                    protein_seq = translate_to_protein(gene_seq)
+                    
+                    # Store protein data
+                    st.session_state.proteins.append({
+                        'sequence_name': gene['sequence_name'],
+                        'gene_id': gene['id'],
+                        'gene_name': gene['name'],
+                        'protein_sequence': protein_seq,
+                        'length': len(protein_seq),
+                        'domains': gene.get('domains', []),
+                        'functions': gene.get('functions', [])
+                    })
                 
-                # Add to session state
-                st.session_state.resistance_data.extend(resistance_results)
-            
-            # 4. Generate recommendations
-            st.session_state.recommendations = get_antibiotic_recommendations(
-                st.session_state.resistance_data
-            )
+                # 3. Analyze resistance
+                st.session_state.resistance_data = []
+                for protein in st.session_state.proteins:
+                    # Analyze protein for resistance markers
+                    resistance_results = analyze_protein_resistance(
+                        protein['protein_sequence'], 
+                        protein['gene_name']
+                    )
+                    
+                    # Add sequence name to resistance data
+                    for r in resistance_results:
+                        r['sequence_name'] = protein['sequence_name']
+                        r['gene_id'] = protein['gene_id']
+                    
+                    # Add to session state
+                    st.session_state.resistance_data.extend(resistance_results)
+                
+                # 4. Generate recommendations
+                st.session_state.recommendations = get_antibiotic_recommendations(
+                    st.session_state.resistance_data
+                )
             
             # 5. Generate summary report
             try:
@@ -409,7 +508,10 @@ if st.session_state.has_analysis:
     st.markdown(st.session_state.summary_report)
     
     # Create tabs for different result sections
-    tab1, tab2, tab3, tab4 = st.tabs(["Predicted Genes", "Protein Sequences", "Resistance Analysis", "Antibiotic Recommendations"])
+    if st.session_state.use_blast_search:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Predicted Genes", "Protein Sequences", "Resistance Analysis", "Antibiotic Recommendations", "BLAST Results"])
+    else:
+        tab1, tab2, tab3, tab4 = st.tabs(["Predicted Genes", "Protein Sequences", "Resistance Analysis", "Antibiotic Recommendations"])
     
     with tab1:
         st.header("Predicted AMR Genes")
@@ -528,10 +630,124 @@ if st.session_state.has_analysis:
             if ineffective:
                 ineffective_df = pd.DataFrame(ineffective)
                 st.dataframe(ineffective_df[['antibiotic', 'confidence', 'rationale']], use_container_width=True)
+                
+                # Add visualization for ineffective antibiotics
+                if len(ineffective) > 1:
+                    fig = px.bar(
+                        ineffective_df, 
+                        x='antibiotic', 
+                        y='confidence',
+                        title='Confidence in Antibiotic Ineffectiveness',
+                        labels={'antibiotic': 'Antibiotic', 'confidence': 'Confidence Score (0-1)'},
+                        color='confidence',
+                        color_continuous_scale='Reds',
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No ineffective antibiotics identified.")
         else:
             st.info("No antibiotic recommendations were generated.")
+    
+    # Display BLAST results tab if BLAST search was used
+    if st.session_state.use_blast_search and 'tab5' in locals():
+        with tab5:
+            st.header("BLAST Search Results")
+            
+            if st.session_state.blast_results:
+                # Overview statistics
+                st.subheader("Overview")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Total Hits", st.session_state.blast_results.get('total_hits', 0))
+                
+                with col2:
+                    num_classes = len(st.session_state.blast_results.get('hits_by_class', {}))
+                    st.metric("Resistance Classes", num_classes)
+                
+                with col3:
+                    num_antibiotics = len(st.session_state.blast_results.get('antibiotic_effectiveness', {}))
+                    st.metric("Antibiotics Analyzed", num_antibiotics)
+                
+                # Resistance classes bar chart
+                st.subheader("Resistance Genes by Class")
+                hits_by_class = st.session_state.blast_results.get('hits_by_class', {})
+                
+                if hits_by_class:
+                    class_counts = {k: len(v) for k, v in hits_by_class.items()}
+                    class_df = pd.DataFrame({
+                        'Class': [k.replace('_', ' ').title() for k in class_counts.keys()],
+                        'Count': list(class_counts.values())
+                    })
+                    
+                    fig = px.bar(
+                        class_df,
+                        x='Class',
+                        y='Count',
+                        title='Resistance Genes Detected by Class',
+                        color='Count',
+                        color_continuous_scale='Reds'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                # Top hits table
+                st.subheader("Top Resistance Gene Hits")
+                all_hits = st.session_state.blast_results.get('all_hits', [])
+                
+                if all_hits:
+                    # Create DataFrame with relevant columns
+                    hits_df = pd.DataFrame([{
+                        'Title': hit['title'],
+                        'E-value': hit['e_value'],
+                        'Identity (%)': round(hit['identity'] * 100, 2),
+                        'Length': hit['length'],
+                        'Score': hit['score'],
+                        'Accession': hit['accession']
+                    } for hit in all_hits])
+                    
+                    # Sort by identity (higher is better)
+                    hits_df = hits_df.sort_values('Identity (%)', ascending=False)
+                    
+                    # Display table
+                    st.dataframe(hits_df, use_container_width=True)
+                    
+                    # Show detailed hit information in expanders
+                    st.subheader("Detailed Hit Information")
+                    
+                    for i, hit in enumerate(all_hits[:10]):  # Show top 10 hits only to avoid clutter
+                        with st.expander(f"Hit {i+1}: {hit['title'][:50]}..."):
+                            st.markdown(f"**Accession:** {hit['accession']}")
+                            st.markdown(f"**E-value:** {hit['e_value']:.2e}")
+                            st.markdown(f"**Identity:** {hit['identity']*100:.2f}%")
+                            st.markdown(f"**Alignment Length:** {hit['length']} bp")
+                            st.markdown(f"**Query Range:** {hit['query_start']} - {hit['query_end']}")
+                            
+                            # Show sequence alignment
+                            st.subheader("Sequence Alignment")
+                            alignment_text = f"""
+                            ```
+                            Query: {hit['query']}
+                                   {hit['alignment']}
+                            Sbjct: {hit['sbjct']}
+                            ```
+                            """
+                            st.markdown(alignment_text)
+                            
+                            # Get related antibiotics
+                            related_antibiotics = []
+                            for antibiotic, data in st.session_state.blast_results.get('antibiotic_effectiveness', {}).items():
+                                if hit['title'].lower() in data['rationale'].lower():
+                                    effectiveness = "✅ Effective" if data['effective'] else "❌ Not Effective"
+                                    related_antibiotics.append(f"{antibiotic}: {effectiveness} ({data['rationale']})")
+                            
+                            if related_antibiotics:
+                                st.subheader("Related Antibiotics")
+                                for ab in related_antibiotics:
+                                    st.markdown(f"- {ab}")
+                else:
+                    st.info("No BLAST hits found. Try lowering the significance threshold or use a different sequence.")
+            else:
+                st.info("No BLAST results available. Run the analysis with BLAST search enabled to see results here.")
 else:
     # Display instructions when no analysis has been done
     st.info("Please upload a FASTA file or enter a raw genetic sequence in the sidebar and click 'Analyze Sequence' to start.")
