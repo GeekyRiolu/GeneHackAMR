@@ -46,12 +46,13 @@ def parse_fasta(fasta_content: str) -> List[Tuple[str, str]]:
     
     return sequences
 
-def predict_amr_genes(sequence: str) -> List[Dict[str, Any]]:
+def predict_amr_genes(sequence: str, sequence_name: str = "Unknown") -> List[Dict[str, Any]]:
     """
     Predict antimicrobial resistance (AMR) genes from a given DNA sequence.
     
     Args:
         sequence: A DNA sequence
+        sequence_name: Name of the sequence being analyzed
         
     Returns:
         List of dictionaries containing gene information
@@ -88,7 +89,8 @@ def predict_amr_genes(sequence: str) -> List[Dict[str, Any]]:
                 'sequence': gene_seq,
                 'start_pos': start_pos,
                 'end_pos': end_pos,
-                'confidence': round(random.uniform(0.70, 0.99), 2)  # Simulated confidence score
+                'confidence': round(random.uniform(0.70, 0.99), 2),  # Simulated confidence score
+                'sequence_name': sequence_name
             })
             gene_id += 1
     
@@ -109,7 +111,8 @@ def predict_amr_genes(sequence: str) -> List[Dict[str, Any]]:
                 'sequence': gene_seq,
                 'start_pos': start_pos,
                 'end_pos': end_pos,
-                'confidence': round(random.uniform(0.60, 0.85), 2)  # Lower confidence for novel genes
+                'confidence': round(random.uniform(0.60, 0.85), 2),  # Lower confidence for novel genes
+                'sequence_name': sequence_name
             })
             gene_id += 1
     

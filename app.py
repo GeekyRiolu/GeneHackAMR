@@ -14,6 +14,7 @@ from data.database import (
 from utils.sequence_processor import (
     validate_sequence, parse_fasta, predict_amr_genes, translate_to_protein
 )
+from utils.blast_search import search_amr_database
 from utils.resistance_predictor import (
     analyze_protein_resistance, get_antibiotic_recommendations
 )
@@ -67,6 +68,8 @@ if 'resistance_data' not in st.session_state:
     st.session_state.resistance_data = []
 if 'recommendations' not in st.session_state:
     st.session_state.recommendations = []
+if 'blast_results' not in st.session_state:
+    st.session_state.blast_results = {}
 if 'summary_report' not in st.session_state:
     st.session_state.summary_report = ""
 if 'has_analysis' not in st.session_state:
@@ -79,6 +82,10 @@ if 'current_sequence_type' not in st.session_state:
     st.session_state.current_sequence_type = ""
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = initialize_chat_history()
+if 'current_sequence' not in st.session_state:
+    st.session_state.current_sequence = ""
+if 'use_blast_search' not in st.session_state:
+    st.session_state.use_blast_search = True
 
 # Custom CSS
 st.markdown("""
@@ -210,7 +217,10 @@ with st.sidebar:
         # Show progress
         with st.spinner("Analyzing genetic sequence..."):
             # 1. Predict AMR genes
-            st.session_state.genes = predict_amr_genes(sequence)
+            st.session_state.genes = predict_amr_genes(
+                sequence=sequence,
+                sequence_name=st.session_state.current_sequence_name
+            )
             
             # 2. Generate protein sequences
             st.session_state.proteins = []
