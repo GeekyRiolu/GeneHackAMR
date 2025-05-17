@@ -9,15 +9,21 @@ from typing import Dict, List, Any, Optional
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.dialects.postgresql import JSON, JSONB
 
 # Get database URL from environment variables
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
+# Check if we're using PostgreSQL or SQLite
+is_postgres = DATABASE_URL.startswith("postgresql://")
 
 # Create SQLAlchemy engine and session
 engine = sa.create_engine(DATABASE_URL if DATABASE_URL else "sqlite:///genehack.db")
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
+
+# Import PostgreSQL specific types if using PostgreSQL
+if is_postgres:
+    from sqlalchemy.dialects.postgresql import JSON, JSONB
 
 class AnalysisResult(Base):
     """Model for storing analysis results."""
@@ -29,10 +35,12 @@ class AnalysisResult(Base):
     sequence_type = sa.Column(sa.String(50))  # 'fasta' or 'raw'
     
     # Store detailed results as JSON
-    genes = sa.Column(JSONB)
-    proteins = sa.Column(JSONB)
-    resistance_data = sa.Column(JSONB)
-    recommendations = sa.Column(JSONB)
+    # Using Text for both PostgreSQL and SQLite for compatibility
+    genes = sa.Column(sa.Text)
+    proteins = sa.Column(sa.Text)
+    resistance_data = sa.Column(sa.Text)
+    recommendations = sa.Column(sa.Text)
+        
     summary_report = sa.Column(sa.Text)
     
     # Metrics
@@ -41,6 +49,19 @@ class AnalysisResult(Base):
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
+        # Handle JSON serialization based on database type
+        if is_postgres:
+            genes = self.genes
+            proteins = self.proteins
+            resistance_data = self.resistance_data
+            recommendations = self.recommendations
+        else:
+            # For SQLite, deserialize JSON from text
+            genes = json.loads(self.genes) if self.genes else []
+            proteins = json.loads(self.proteins) if self.proteins else []
+            resistance_data = json.loads(self.resistance_data) if self.resistance_data else []
+            recommendations = json.loads(self.recommendations) if self.recommendations else []
+            
         return {
             'id': self.id,
             'created_at': self.created_at.isoformat() if self.created_at is not None else None,
@@ -48,10 +69,10 @@ class AnalysisResult(Base):
             'sequence_type': self.sequence_type,
             'num_genes': self.num_genes,
             'num_resistance_markers': self.num_resistance_markers,
-            'genes': self.genes,
-            'proteins': self.proteins,
-            'resistance_data': self.resistance_data,
-            'recommendations': self.recommendations,
+            'genes': genes,
+            'proteins': proteins,
+            'resistance_data': resistance_data,
+            'recommendations': recommendations,
             'summary_report': self.summary_report
         }
 
