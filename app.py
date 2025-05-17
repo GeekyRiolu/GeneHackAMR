@@ -200,11 +200,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Sidebar
+# Sidebar with medical theme
 with st.sidebar:
-    st.image("https://i.imgur.com/1HZXeGH.png", width=100)
+    # Medical logo (DNA caduceus symbol - medical staff with DNA double helix)
+    st.image("https://i.imgur.com/VyMHfcT.png", width=120)
     st.markdown('<div class="main-header">GeneHack AMR</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Antimicrobial Resistance Analysis</div>', unsafe_allow_html=True)
+    
+    # Add a divider
+    st.markdown('<hr style="height:2px;border:none;color:#e0e0e0;background-color:#e0e0e0;" />', unsafe_allow_html=True)
     
     # Input section
     st.subheader("Sequence Input")
@@ -527,7 +531,13 @@ with st.sidebar:
             st.info("No analysis history found.")
 
 # Main content
-st.title("Genomic Antimicrobial Resistance Analysis")
+# Title with medical styling
+st.markdown("""
+<div style="background-color: #f0f7ff; padding: 20px; border-radius: 10px; border-left: 5px solid #1976d2; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+    <h1 style="color: #0d47a1; margin: 0; font-size: 2.2rem;">Bacterial Genome Antimicrobial Resistance Analysis</h1>
+    <p style="color: #666; margin-top: 5px; font-size: 1.1rem;">Identify resistance genes and effective antibiotics through genomic analysis</p>
+</div>
+""", unsafe_allow_html=True)
 
 # Only show analysis results if we have data
 if st.session_state.has_analysis:
@@ -695,8 +705,14 @@ if st.session_state.has_analysis:
                 else:
                     ineffective.append(rec)
             
-            # Display effective antibiotics
-            st.subheader("Recommended Effective Antibiotics")
+            # Display effective antibiotics with medical styling
+            st.markdown("""
+            <div style="background-color: #f0fff0; padding: 15px; border-radius: 8px; border-left: 5px solid #4caf50; margin-bottom: 15px;">
+                <h3 style="color: #2e7d32; margin-top: 0;">Recommended Effective Antibiotics</h3>
+                <p style="color: #666; font-size: 0.9rem;">Based on resistance gene analysis from bacterial genome sequencing</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
             if effective:
                 effective_df = pd.DataFrame(effective)
                 st.dataframe(effective_df[['antibiotic', 'confidence', 'rationale']], use_container_width=True)
@@ -715,8 +731,14 @@ if st.session_state.has_analysis:
             else:
                 st.warning("No effective antibiotics found based on the resistance profile.")
             
-            # Display ineffective antibiotics
-            st.subheader("Antibiotics Predicted to be Ineffective")
+            # Display ineffective antibiotics with medical styling
+            st.markdown("""
+            <div style="background-color: #fff5f5; padding: 15px; border-radius: 8px; border-left: 5px solid #f44336; margin-bottom: 15px; margin-top: 25px;">
+                <h3 style="color: #c62828; margin-top: 0;">Antibiotics Predicted to be Ineffective</h3>
+                <p style="color: #666; font-size: 0.9rem;">Resistance genes detected in bacterial genome analysis</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
             if ineffective:
                 ineffective_df = pd.DataFrame(ineffective)
                 st.dataframe(ineffective_df[['antibiotic', 'confidence', 'rationale']], use_container_width=True)
