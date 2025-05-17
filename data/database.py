@@ -50,17 +50,30 @@ class AnalysisResult(Base):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         # Handle JSON serialization based on database type
-        if is_postgres:
-            genes = self.genes
-            proteins = self.proteins
-            resistance_data = self.resistance_data
-            recommendations = self.recommendations
-        else:
-            # For SQLite, deserialize JSON from text
-            genes = json.loads(self.genes) if self.genes else []
-            proteins = json.loads(self.proteins) if self.proteins else []
-            resistance_data = json.loads(self.resistance_data) if self.resistance_data else []
-            recommendations = json.loads(self.recommendations) if self.recommendations else []
+        try:
+            # Convert data from database format
+            genes_data = self.genes
+            proteins_data = self.proteins
+            resistance_data_data = self.resistance_data
+            recommendations_data = self.recommendations
+            
+            # For SQLite, we need to deserialize the JSON strings
+            if not is_postgres and isinstance(genes_data, str):
+                genes = json.loads(genes_data) if genes_data else []
+                proteins = json.loads(proteins_data) if proteins_data else []
+                resistance_data = json.loads(resistance_data_data) if resistance_data_data else []
+                recommendations = json.loads(recommendations_data) if recommendations_data else []
+            else:
+                genes = genes_data
+                proteins = proteins_data
+                resistance_data = resistance_data_data
+                recommendations = recommendations_data
+        except (TypeError, json.JSONDecodeError):
+            # Fallback in case of errors
+            genes = []
+            proteins = []
+            resistance_data = []
+            recommendations = []
             
         return {
             'id': self.id,
@@ -129,13 +142,25 @@ def save_analysis_result(
     session = Session()
     
     try:
+        # For SQLite, convert data to JSON strings
+        if not is_postgres:
+            genes_json = json.dumps(genes)
+            proteins_json = json.dumps(proteins)
+            resistance_data_json = json.dumps(resistance_data)
+            recommendations_json = json.dumps(recommendations)
+        else:
+            genes_json = genes
+            proteins_json = proteins
+            resistance_data_json = resistance_data
+            recommendations_json = recommendations
+        
         result = AnalysisResult(
             sequence_name=sequence_name,
             sequence_type=sequence_type,
-            genes=genes,
-            proteins=proteins,
-            resistance_data=resistance_data,
-            recommendations=recommendations,
+            genes=genes_json,
+            proteins=proteins_json,
+            resistance_data=resistance_data_json,
+            recommendations=recommendations_json,
             summary_report=summary_report,
             num_genes=len(genes),
             num_resistance_markers=len(resistance_data)

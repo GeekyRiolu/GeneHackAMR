@@ -122,6 +122,9 @@ with st.sidebar:
     input_method = st.radio("Select input method", 
                             ["Upload FASTA File", "Enter Raw Sequence", "Load Saved Sequence"])
     
+    # Initialize sequence variable
+    sequence = ""
+    
     if input_method == "Upload FASTA File":
         uploaded_file = st.file_uploader("Upload FASTA file", 
                                          type=["fasta", "fa", "fna", "ffn", "txt"])
@@ -340,10 +343,13 @@ if st.session_state.has_analysis:
     # Create columns for save UI
     save_col1, save_col2 = st.columns([3, 1])
     
+    # Initialize sequence_name variable
+    sequence_name = st.session_state.current_sequence_name if st.session_state.current_sequence_name else "My Sequence"
+    
     with save_col1:
         if not st.session_state.result_saved:
             sequence_name = st.text_input("Sequence Name for Saving", 
-                                         value=st.session_state.current_sequence_name if st.session_state.current_sequence_name else "My Sequence")
+                                         value=sequence_name)
         else:
             st.info(f"Saved as: {st.session_state.current_sequence_name} ✓")
     
