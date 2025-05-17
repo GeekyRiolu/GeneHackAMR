@@ -58,6 +58,9 @@ def load_lottie_url(url):
 # Load animations
 molecule_animation = load_lottie_url('https://assets3.lottiefiles.com/packages/lf20_UgZWvP.json')
 laboratory_animation = load_lottie_url('https://assets5.lottiefiles.com/packages/lf20_vwgfy3ve.json')
+dna_loading_animation = load_lottie_url('https://assets6.lottiefiles.com/packages/lf20_ft8ck4lv.json')
+analysis_loading_animation = load_lottie_url('https://assets2.lottiefiles.com/private_files/lf30_l8csvun7.json')
+search_loading_animation = load_lottie_url('https://assets2.lottiefiles.com/packages/lf20_zwn6fgkj.json')
 
 # Initialize session state variables if they don't exist
 if 'genes' not in st.session_state:
@@ -363,11 +366,32 @@ with st.sidebar:
             # Save current sequence for later use
             st.session_state.current_sequence = sequence
             
+            # Create a container for the loading animation
+            loading_container = st.empty()
+            
+            # Show animated loading indicators
+            with loading_container.container():
+                col1, col2, col3 = st.columns([1, 2, 1])
+                with col2:
+                    st.markdown("<h3 style='text-align: center; color: #1976d2;'>Analyzing Bacterial Genome</h3>", unsafe_allow_html=True)
+                    if dna_loading_animation:
+                        st_lottie(dna_loading_animation, speed=1, height=200, key="dna_loading")
+                    st.markdown("<p style='text-align: center; color: #666;'>Processing sequence data for resistance markers...</p>", unsafe_allow_html=True)
+            
             # Show progress
             with st.spinner("Analyzing bacterial genome for resistance genes..."):
                 if st.session_state.use_blast_search:
                     # Approach 1: Use BLAST search for more accurate results
                     with st.status("Running BLAST search against AMR databases...", expanded=True) as status:
+                        # Update animation to show search-specific animation
+                        with loading_container.container():
+                            col1, col2, col3 = st.columns([1, 2, 1])
+                            with col2:
+                                st.markdown("<h3 style='text-align: center; color: #1976d2;'>Running BLAST Search</h3>", unsafe_allow_html=True)
+                                if search_loading_animation:
+                                    st_lottie(search_loading_animation, speed=1, height=200, key="search_loading")
+                                st.markdown("<p style='text-align: center; color: #666;'>Searching for resistance genes in databases...</p>", unsafe_allow_html=True)
+                        
                         st.write("Searching for resistance genes...")
                         
                         # Run BLAST search
@@ -447,9 +471,27 @@ with st.sidebar:
                                     'functions': gene.get('functions', [])
                                 })
                         
+                        # Update animation to show analysis animation
+                        with loading_container.container():
+                            col1, col2, col3 = st.columns([1, 2, 1])
+                            with col2:
+                                st.markdown("<h3 style='text-align: center; color: #1976d2;'>Analyzing Results</h3>", unsafe_allow_html=True)
+                                if analysis_loading_animation:
+                                    st_lottie(analysis_loading_animation, speed=1, height=200, key="analysis_loading")
+                                st.markdown("<p style='text-align: center; color: #666;'>Analyzing resistance patterns and generating recommendations...</p>", unsafe_allow_html=True)
+                        
                         status.update(label="BLAST search complete", state="complete", expanded=False)
                 else:
                     # Approach 2: Use built-in prediction methods (fallback)
+                    # Show different animation for this path
+                    with loading_container.container():
+                        col1, col2, col3 = st.columns([1, 2, 1])
+                        with col2:
+                            st.markdown("<h3 style='text-align: center; color: #1976d2;'>Gene Prediction</h3>", unsafe_allow_html=True)
+                            if analysis_loading_animation:
+                                st_lottie(analysis_loading_animation, speed=1, height=200, key="gene_loading")
+                            st.markdown("<p style='text-align: center; color: #666;'>Predicting resistance genes from sequence patterns...</p>", unsafe_allow_html=True)
+                    
                     # 1. Predict AMR genes
                     st.session_state.genes = predict_amr_genes(
                         sequence=sequence,
@@ -499,6 +541,15 @@ with st.sidebar:
                     )
                 
                 # 5. Generate summary report
+                # Show final report generation animation
+                with loading_container.container():
+                    col1, col2, col3 = st.columns([1, 2, 1])
+                    with col2:
+                        st.markdown("<h3 style='text-align: center; color: #1976d2;'>Generating Report</h3>", unsafe_allow_html=True)
+                        if dna_loading_animation:
+                            st_lottie(dna_loading_animation, speed=1, height=200, key="summary_loading")
+                        st.markdown("<p style='text-align: center; color: #666;'>Creating comprehensive analysis report...</p>", unsafe_allow_html=True)
+                
                 try:
                     st.session_state.summary_report = generate_summary_report({
                         'genes': st.session_state.genes,
@@ -513,6 +564,9 @@ with st.sidebar:
                         'resistance_data': st.session_state.resistance_data,
                         'recommendations': st.session_state.recommendations
                     })
+                    
+                # Clear the loading animation container when done
+                loading_container.empty()
                 
                 # 6. Save sequence if it's not already in the database
                 if input_method != "Load Saved Sequence":
