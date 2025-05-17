@@ -565,12 +565,22 @@ if st.session_state.nav_page == "history":
             for i, item in enumerate(history):
                 with st.container():
                     # Create a styled card for each history item
+                    # Format the date - handling both datetime and string formats
+                    date_str = ""
+                    if item['created_at']:
+                        if hasattr(item['created_at'], 'strftime'):
+                            # If it's a datetime object
+                            date_str = item['created_at'].strftime('%Y-%m-%d %H:%M')
+                        else:
+                            # If it's already a string
+                            date_str = str(item['created_at'])
+                    
                     st.markdown(f"""
                     <div style="background-color: white; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;">
                         <h3 style="color: #0d47a1; margin-top: 0; font-size: 1.2rem;">{item['sequence_name']}</h3>
                         <p style="color: #666; margin-bottom: 5px; font-size: 0.9rem;">
                             <span style="color: #1976d2;">ID:</span> {item['id']} | 
-                            <span style="color: #1976d2;">Date:</span> {item['created_at'].strftime('%Y-%m-%d %H:%M')}
+                            <span style="color: #1976d2;">Date:</span> {date_str}
                         </p>
                         <p style="color: #666; font-size: 0.9rem;">
                             <span style="background-color: #e3f2fd; padding: 3px 8px; border-radius: 4px; margin-right: 10px;">
