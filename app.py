@@ -61,6 +61,9 @@ laboratory_animation = load_lottie_url('https://assets5.lottiefiles.com/packages
 dna_loading_animation = load_lottie_url('https://assets6.lottiefiles.com/packages/lf20_ft8ck4lv.json')
 analysis_loading_animation = load_lottie_url('https://assets2.lottiefiles.com/private_files/lf30_l8csvun7.json')
 search_loading_animation = load_lottie_url('https://assets2.lottiefiles.com/packages/lf20_zwn6fgkj.json')
+team_animation = load_lottie_url('https://assets1.lottiefiles.com/packages/lf20_vkwkzftx.json')
+doctor_animation = load_lottie_url('https://assets1.lottiefiles.com/packages/lf20_s7vzlpm5.json')
+genome_animation = load_lottie_url('https://assets4.lottiefiles.com/packages/lf20_xlmz9xwm.json')
 
 # Initialize session state variables if they don't exist
 if 'genes' not in st.session_state:
@@ -91,6 +94,8 @@ if 'use_blast_search' not in st.session_state:
     st.session_state.use_blast_search = True
 if 'nav_page' not in st.session_state:
     st.session_state.nav_page = "home"
+if 'show_landing_page' not in st.session_state:
+    st.session_state.show_landing_page = True
 
 # Custom CSS with medical theme
 st.markdown("""
@@ -596,14 +601,138 @@ with st.sidebar:
                 # Rerun to update UI
                 st.rerun()
 
-# Main content
-# Title with medical styling
-st.markdown("""
-<div style="background-color: #f0f7ff; padding: 20px; border-radius: 10px; border-left: 5px solid #1976d2; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
-    <h1 style="color: #0d47a1; margin: 0; font-size: 2.2rem;">Bacterial Genome Antimicrobial Resistance Analysis</h1>
-    <p style="color: #666; margin-top: 5px; font-size: 1.1rem;">Identify resistance genes and effective antibiotics through genomic analysis</p>
-</div>
-""", unsafe_allow_html=True)
+# Check if we should show the landing page or the main app
+if st.session_state.show_landing_page:
+    # Hide sidebar for landing page
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Landing page content
+    st.markdown("""
+    <div style="text-align: center; margin-top: 10px;">
+        <h1 style="color: #0d47a1; font-size: 3.5rem; margin-bottom: 10px; font-weight: 700;">GeneHack AMR</h1>
+        <p style="color: #424242; font-size: 1.5rem; margin-bottom: 30px;">Revolutionizing Antimicrobial Resistance Analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Animated banner
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if genome_animation:
+            st_lottie(genome_animation, speed=1, height=250, key="genome")
+    
+    # Project introduction
+    st.markdown("""
+    <div style="background-color: #f0f7ff; padding: 25px; border-radius: 10px; margin: 20px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #1976d2;">
+        <h2 style="color: #0d47a1; margin-top: 0;">Docathon Collaboration Project</h2>
+        <p style="color: #424242; font-size: 1.1rem; line-height: 1.6;">
+            GeneHack AMR is a groundbreaking tool developed during the Docathon - an innovative hackathon bringing together 
+            healthcare professionals and software engineers to solve critical medical challenges. This tool emerged from 
+            the collaboration between doctors with expertise in infectious diseases and engineers skilled in genomic analysis and AI.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Features section
+    st.markdown("<h2 style='color: #0d47a1; text-align: center; margin: 40px 0 30px;'>Key Features</h2>", unsafe_allow_html=True)
+    
+    feature_col1, feature_col2, feature_col3 = st.columns(3)
+    
+    with feature_col1:
+        st.markdown("""
+        <div style="background-color: white; padding: 20px; border-radius: 10px; height: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;">
+            <h3 style="color: #1976d2; font-size: 1.3rem;">🧬 Genomic Analysis</h3>
+            <p style="color: #616161;">Identify antimicrobial resistance genes in bacterial genomes with precision using advanced BLAST technology.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with feature_col2:
+        st.markdown("""
+        <div style="background-color: white; padding: 20px; border-radius: 10px; height: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;">
+            <h3 style="color: #1976d2; font-size: 1.3rem;">💊 Antibiotic Recommendations</h3>
+            <p style="color: #616161;">Receive data-driven guidance on effective antibiotics based on the resistance profile of analyzed bacteria.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with feature_col3:
+        st.markdown("""
+        <div style="background-color: white; padding: 20px; border-radius: 10px; height: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e0e0e0;">
+            <h3 style="color: #1976d2; font-size: 1.3rem;">🔬 Interactive Visualizations</h3>
+            <p style="color: #616161;">Explore resistance markers, protein structures, and antibiotic effectiveness through intuitive visual interfaces.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Team section
+    st.markdown("<h2 style='color: #0d47a1; text-align: center; margin: 40px 0 30px;'>Interdisciplinary Team</h2>", unsafe_allow_html=True)
+    
+    team_col1, team_col2 = st.columns([1, 1])
+    
+    with team_col1:
+        if doctor_animation:
+            st_lottie(doctor_animation, speed=1, height=200, key="doctor")
+        st.markdown("""
+        <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+            <h3 style="color: #1565c0; margin-top: 0;">Medical Professionals</h3>
+            <p style="color: #424242;">Infectious disease specialists contributing clinical expertise on antimicrobial resistance mechanisms and treatment protocols.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with team_col2:
+        if team_animation:
+            st_lottie(team_animation, speed=1, height=200, key="team")
+        st.markdown("""
+        <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+            <h3 style="color: #1565c0; margin-top: 0;">Software Engineers</h3>
+            <p style="color: #424242;">Bioinformatics and AI specialists building the computational infrastructure for genetic analysis and data visualization.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Impact section
+    st.markdown("""
+    <div style="background-color: #e8f5e9; padding: 25px; border-radius: 10px; margin: 40px 0 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 5px solid #43a047;">
+        <h2 style="color: #2e7d32; margin-top: 0;">Healthcare Impact</h2>
+        <p style="color: #424242; font-size: 1.1rem; line-height: 1.6;">
+            Antimicrobial resistance is one of the top 10 global public health threats facing humanity according to the WHO. 
+            GeneHack AMR empowers healthcare providers with rapid bacterial genome analysis to choose effective antibiotics, 
+            leading to better patient outcomes, reduced treatment failures, and slower development of resistance.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Call to action button
+    st.markdown("<div style='text-align: center; margin: 50px 0;'>", unsafe_allow_html=True)
+    
+    if st.button("🚀 Try GeneHack AMR Now", key="try_app_button", type="primary", 
+                use_container_width=True, help="Launch the application"):
+        # Switch to main app
+        st.session_state.show_landing_page = False
+        st.rerun()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Footer
+    st.markdown("""
+    <div style="text-align: center; margin-top: 60px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+        <p style="color: #9e9e9e; font-size: 0.9rem;">
+            © 2025 GeneHack AMR | Developed during Docathon | Streamlit Powered
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+else:
+    # Regular app content with sidebar visible
+    # Title with medical styling
+    st.markdown("""
+    <div style="background-color: #f0f7ff; padding: 20px; border-radius: 10px; border-left: 5px solid #1976d2; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+        <h1 style="color: #0d47a1; margin: 0; font-size: 2.2rem;">Bacterial Genome Antimicrobial Resistance Analysis</h1>
+        <p style="color: #666; margin-top: 5px; font-size: 1.1rem;">Identify resistance genes and effective antibiotics through genomic analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Handle navigation between Home and History pages
 if st.session_state.nav_page == "history":
