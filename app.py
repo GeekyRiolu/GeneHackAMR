@@ -870,7 +870,7 @@ elif st.session_state.nav_page == "home":
         st.markdown(st.session_state.summary_report)
         
         # Create tabs for different result sections
-        tabs = ["Predicted Genes", "Protein Sequences", "Resistance Analysis", "Antibiotic Recommendations"]
+        tabs = ["Predicted Genes", "Protein Sequences", "Antibiotic Recommendations"]
         
         # Add BLAST results tab if using BLAST search
         if st.session_state.use_blast_search:
@@ -949,37 +949,10 @@ elif st.session_state.nav_page == "home":
             else:
                 st.info("No protein sequences were generated.")
         
-        # Tab 2: Resistance Analysis
-        with all_tabs[2]:
-            st.header("Resistance Analysis")
-            
-            if st.session_state.resistance_data:
-                # Convert to DataFrame for display
-                resistance_df = pd.DataFrame(st.session_state.resistance_data)
-                st.dataframe(
-                    resistance_df[['sequence_name', 'gene_name', 'antibiotic', 'resistance_level', 'mechanism']], 
-                    use_container_width=True
-                )
-                
-                # Resistance heatmap
-                st.subheader("Resistance Heatmap")
-                heatmap = create_resistance_heatmap(st.session_state.resistance_data)
-                st.plotly_chart(heatmap, use_container_width=True)
-                
-                # Group resistance by mechanism
-                if 'mechanism' in resistance_df.columns:
-                    st.subheader("Resistance Mechanisms")
-                    mech_counts = resistance_df['mechanism'].value_counts().reset_index()
-                    mech_counts.columns = ['Mechanism', 'Count']
-                    
-                    fig = px.pie(mech_counts, values='Count', names='Mechanism', 
-                                 title='Distribution of Resistance Mechanisms')
-                    st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No resistance data was generated.")
+
         
-        # Tab 3: Antibiotic Recommendations
-        with all_tabs[3]:
+        # Tab 2: Antibiotic Recommendations
+        with all_tabs[2]:
             st.header("Antibiotic Recommendations")
             
             if st.session_state.recommendations:
@@ -1174,18 +1147,18 @@ elif st.session_state.nav_page == "home":
                 2. **Click 'Analyze Sequence'** to process the data
                 
                 3. **View the results** across different tabs:
-                   - Predicted AMR Genes
+                   - Predicted AMR Genes with Organism Identification
                    - Protein Sequences
-                   - Resistance Analysis
                    - Antibiotic Recommendations
                 
                 ### What GeneHack AMR does:
                 
                 - **Gene Prediction**: Identifies genes linked to antimicrobial resistance
+                - **Organism Identification**: Maps sequence IDs to bacterial species names
                 - **Protein Translation**: Converts genes to protein sequences
-                - **Resistance Analysis**: Analyzes which antibiotics might be ineffective
-                - **Recommendations**: Suggests which antibiotics might still be effective
-                - **Visualization**: Provides interactive plots to understand the results
+                - **Antibiotic Analysis**: Analyzes effectiveness of different antibiotics
+                - **Smart Recommendations**: Suggests which antibiotics might be effective
+                - **Visualization**: Provides interactive plots to understand results
                 """)
                 
             with demo_col2:
