@@ -886,7 +886,29 @@ elif st.session_state.nav_page == "home":
             if st.session_state.genes:
                 # Convert to DataFrame for display
                 genes_df = pd.DataFrame(st.session_state.genes)
-                st.dataframe(genes_df[['sequence_name', 'id', 'name', 'start_pos', 'end_pos', 'confidence']], use_container_width=True)
+                
+                # Create organism mapping dictionary based on gene names
+                organism_mapping = {
+                    'mecA': 'Staphylococcus aureus',
+                    'vanA': 'Enterococcus faecium',
+                    'tetM': 'Multiple species',
+                    'blaTEM': 'Escherichia coli',
+                    'blaCTX-M': 'Enterobacteriaceae',
+                    'blaKPC': 'Klebsiella pneumoniae',
+                    'blaNDM': 'Enterobacteriaceae',
+                    'qnrA': 'Enterobacteriaceae',
+                    'qnrS': 'Enterobacteriaceae',
+                    'aac': 'Multiple species',
+                    'ermB': 'Streptococcus species'
+                }
+                
+                # Map gene names to organism names
+                genes_df['organism'] = genes_df['name'].apply(
+                    lambda x: organism_mapping.get(x, 'Unknown organism')
+                )
+                
+                # Display the DataFrame with organism names instead of sequence_name
+                st.dataframe(genes_df[['organism', 'id', 'name', 'start_pos', 'end_pos', 'confidence']], use_container_width=True)
                 
                 # Gene visualization
                 st.subheader("Gene Location Visualization")
@@ -1174,80 +1196,10 @@ elif st.session_state.nav_page == "home":
                 if laboratory_animation:
                     st_lottie(laboratory_animation, speed=1, height=300, key="lab_animation")
 
-# Add chatbot assistant
+# Add footer
 st.markdown("---")
-st.header("💬 AI Research Assistant")
-st.markdown("Ask questions about your analysis or get help interpreting results.")
-
-# Create two columns - one for chat history and one for suggestions
-chat_col1, chat_col2 = st.columns([2, 1])
-
-with chat_col1:
-    # Chat input area
-    user_input = st.text_input("Enter your question:", key="chat_input", placeholder="e.g., What do the resistance findings mean?")
-    
-    # Process user input
-    if user_input:
-        # Get AI response
-        response = chat_with_assistant(st.session_state.chat_history, user_input)
-        
-        # Update chat history
-        st.session_state.chat_history = response["chat_history"]
-        
-        # Clear input after processing
-        st.rerun()
-    
-    # Display chat history
-    st.subheader("Conversation")
-    
-    # Skip the system message when displaying
-    for message in st.session_state.chat_history[1:]:
-        role = message['role']
-        content = message['content']
-        
-        if role == "user":
-            st.markdown(f"""
-            <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
-                <b>You:</b> {content}
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-            <div style="background-color: #e1f5fe; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
-                <b>AI Assistant:</b> {content}
-            </div>
-            """, unsafe_allow_html=True)
-
-with chat_col2:
-    # Generate and display suggestions if an analysis was performed
-    if st.session_state.has_analysis:
-        st.subheader("Suggested Questions")
-        
-        # Generate suggestions based on the analysis data
-        suggestions = generate_analysis_suggestions({
-            'genes': st.session_state.genes,
-            'proteins': st.session_state.proteins,
-            'resistance_data': st.session_state.resistance_data
-        })
-        
-        # Display suggested questions
-        for question in suggestions.get('questions', []):
-            if st.button(question, key=f"suggest_{hash(question)}"):
-                # Add question to chat history and get response
-                response = chat_with_assistant(st.session_state.chat_history, question)
-                
-                # Update chat history
-                st.session_state.chat_history = response["chat_history"]
-                
-                # Rerun to update UI
-                st.rerun()
-        
-        # Display suggested research directions
-        st.subheader("Research Directions")
-        for direction in suggestions.get('research_directions', []):
-            st.markdown(f"- {direction}")
-    else:
-        st.info("Analysis suggestions will appear here once you've analyzed a sequence.")
+st.markdown("### 🧬 GeneHack AMR")
+st.markdown("Antimicrobial Resistance Analysis Platform for Bacterial Genomes")
 
 # Create Streamlit config directory and config.toml file if not exists
 import os
