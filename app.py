@@ -1021,9 +1021,9 @@ elif st.session_state.nav_page == "home":
             else:
                 st.info("No antibiotic recommendations were generated.")
         
-        # Tab 4: BLAST Results (only shown if using BLAST search)
-        if st.session_state.use_blast_search and len(all_tabs) > 4:
-            with all_tabs[4]:
+        # Tab 3: BLAST Results (only shown if using BLAST search)
+        if st.session_state.use_blast_search and len(all_tabs) > 3:
+            with all_tabs[3]:
                 st.header("BLAST Search Results")
                 
                 if st.session_state.blast_results:
@@ -1122,44 +1122,90 @@ elif st.session_state.nav_page == "home":
                 else:
                     st.info("No BLAST results available. Run the analysis with BLAST search enabled to see results here.")
     else:
-        # Display instructions when no analysis has been done
-        st.info("Please upload a FASTA file or enter a raw genetic sequence in the sidebar and click 'Analyze Sequence' to start.")
+        # Enhanced landing page with modern UI
+        st.markdown("""
+        <div style="text-align: center; padding: 20px 0;">
+            <h1 style="color: #1976d2; font-size: 2.8rem; margin-bottom: 10px;">GeneHack AMR</h1>
+            <p style="color: #666; font-size: 1.2rem; margin-bottom: 25px;">Advanced Antimicrobial Resistance Analysis Platform</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Add molecule animation to the main page when not analyzing
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             if molecule_animation:
-                st_lottie(molecule_animation, speed=1, height=300, key="molecule_animation")
+                st_lottie(molecule_animation, speed=1, height=350, key="molecule_animation")
         
-        # Example/demo section
-        with st.expander("How to use GeneHack AMR"):
+        # Instructions with improved styling
+        st.markdown("""
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; border-left: 5px solid #1976d2;">
+            <h3 style="color: #1976d2; margin-top: 0;">Getting Started</h3>
+            <p>Upload a FASTA file or enter a raw genetic sequence in the sidebar and click 'Analyze Sequence' to start your analysis.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Feature cards in columns
+        st.markdown("<h2 style='text-align: center; color: #333; margin: 30px 0 20px;'>Key Features</h2>", unsafe_allow_html=True)
+        
+        feature_col1, feature_col2, feature_col3 = st.columns(3)
+        
+        with feature_col1:
+            st.markdown("""
+            <div style="background-color: white; border-radius: 8px; padding: 15px; height: 200px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <h3 style="color: #1976d2;">🧬 Gene Prediction</h3>
+                <p>Identifies genes linked to antimicrobial resistance with organism identification.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with feature_col2:
+            st.markdown("""
+            <div style="background-color: white; border-radius: 8px; padding: 15px; height: 200px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <h3 style="color: #1976d2;">🧪 Protein Analysis</h3>
+                <p>Converts genes to protein sequences and provides detailed domain analysis.</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with feature_col3:
+            st.markdown("""
+            <div style="background-color: white; border-radius: 8px; padding: 15px; height: 200px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <h3 style="color: #1976d2;">💊 Antibiotic Recommendations</h3>
+                <p>Suggests which antibiotics might be effective based on the resistance profile.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Example/demo section with improved styling
+        with st.expander("📚 How to use GeneHack AMR"):
             # Split content into columns
             demo_col1, demo_col2 = st.columns([3, 2])
             
             with demo_col1:
                 st.markdown("""
-                ### How to use this tool:
-                
-                1. **Input your genetic sequence** using one of two methods:
-                   - Upload a FASTA file (.fasta, .fa, .fna, .ffn, or .txt)
-                   - Paste a raw nucleotide sequence directly
-                
-                2. **Click 'Analyze Sequence'** to process the data
-                
-                3. **View the results** across different tabs:
-                   - Predicted AMR Genes with Organism Identification
-                   - Protein Sequences
-                   - Antibiotic Recommendations
-                
-                ### What GeneHack AMR does:
-                
-                - **Gene Prediction**: Identifies genes linked to antimicrobial resistance
-                - **Organism Identification**: Maps sequence IDs to bacterial species names
-                - **Protein Translation**: Converts genes to protein sequences
-                - **Antibiotic Analysis**: Analyzes effectiveness of different antibiotics
-                - **Smart Recommendations**: Suggests which antibiotics might be effective
-                - **Visualization**: Provides interactive plots to understand results
-                """)
+                <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                    <h3 style="color: #1976d2; margin-top: 0;">Quick Start Guide</h3>
+                    
+                    <ol style="padding-left: 20px;">
+                        <li><b>Select input method</b> in the sidebar: Upload FASTA, paste raw sequence, or load saved</li>
+                        <li><b>Click 'Analyze Sequence'</b> to process the genomic data</li>
+                        <li><b>Review results</b> across the interactive tabs</li>
+                    </ol>
+                    
+                    <h4 style="color: #1976d2; margin-top: 20px;">Results Breakdown</h4>
+                    <ul style="list-style-type: none; padding-left: 0;">
+                        <li>🧫 <b>Predicted Genes</b> - AMR genes with organism identification</li>
+                        <li>🔬 <b>Protein Sequences</b> - Translated proteins with domain analysis</li>
+                        <li>💊 <b>Antibiotic Recommendations</b> - Effective treatment options</li>
+                        <li>🔍 <b>BLAST Results</b> - Detailed gene matches from databases</li>
+                    </ul>
+                    
+                    <h4 style="color: #1976d2; margin-top: 20px;">Key Capabilities</h4>
+                    <ul style="padding-left: 20px;">
+                        <li><b>Advanced Organism Identification</b> - Identifies bacterial species from sequence IDs</li>
+                        <li><b>Resistance Pattern Analysis</b> - Detects patterns of antimicrobial resistance</li>
+                        <li><b>Treatment Guidance</b> - Provides evidence-based antibiotic recommendations</li>
+                        <li><b>Interactive Visualizations</b> - Helps understand complex genomic data</li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
                 
             with demo_col2:
                 if laboratory_animation:
@@ -1177,9 +1223,9 @@ if not os.path.exists(".streamlit"):
 
 if not os.path.exists(".streamlit/config.toml"):
     with open(".streamlit/config.toml", "w") as f:
-        f.write("""
+        f.write('''
 [server]
 headless = true
 address = "0.0.0.0"
 port = 5000
-        """)
+        ''')
