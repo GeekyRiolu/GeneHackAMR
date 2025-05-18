@@ -21,7 +21,6 @@ from utils.resistance_predictor import (
 from utils.visualization import (
     create_gene_visualization, create_resistance_heatmap, create_protein_domain_plot
 )
-from utils.protein_3d import render_protein_3d, create_interactive_protein_view
 from utils.chatbot_assistant import (
     initialize_chat_history, add_analysis_context, 
     chat_with_assistant, generate_analysis_suggestions
@@ -32,6 +31,7 @@ from utils.enhanced_visualizations import (
     create_antibiotic_resistance_count_chart, create_resistance_mechanism_donut,
     create_3d_gene_clustering, create_3d_protein_comparison
 )
+from utils.sequence_identifier import get_organism_mapping, identify_organism_from_accession
 
 # Create database tables if they don't exist
 create_tables()
@@ -887,28 +887,40 @@ elif st.session_state.nav_page == "home":
                 # Convert to DataFrame for display
                 genes_df = pd.DataFrame(st.session_state.genes)
                 
-                # Create organism mapping dictionary based on gene names
-                organism_mapping = {
-                    'mecA': 'Staphylococcus aureus',
-                    'vanA': 'Enterococcus faecium',
-                    'tetM': 'Multiple species',
-                    'blaTEM': 'Escherichia coli',
-                    'blaCTX-M': 'Enterobacteriaceae',
-                    'blaKPC': 'Klebsiella pneumoniae',
-                    'blaNDM': 'Enterobacteriaceae',
-                    'qnrA': 'Enterobacteriaceae',
-                    'qnrS': 'Enterobacteriaceae',
-                    'aac': 'Multiple species',
-                    'ermB': 'Streptococcus species'
-                }
+                # Sample GI IDs to use for demonstration (these would normally come from your sequence data)
+                sample_ids = [
+                    "gi|2949256985|gb|PV357209.1|",
+                    "gi|2955779261|gb|CP186947.1|",
+                    "gi|2907303961|gb|CP180162.1|",
+                    "gi|2944053110|gb|CP185129.1|",
+                    "gi|2944072299|gb|CP185207.1|",
+                    "gi|2957198048|gb|CP187245.1|",
+                    "gi|2936382141|gb|CP127996.1|",
+                    "gi|2929938784|gb|CP184032.1|",
+                    "gi|2955378441|gb|CP186876.1|",
+                    "gi|2944049663|gb|CP185092.1|"
+                ]
                 
-                # Map gene names to organism names
-                genes_df['organism'] = genes_df['name'].apply(
-                    lambda x: organism_mapping.get(x, 'Unknown organism')
+                # Use OpenAI to identify organisms from the accession IDs
+                organism_info = {}
+                for i, seq_id in enumerate(sample_ids):
+                    if i < len(genes_df):
+                        # Get organism info for each sequence ID
+                        info = identify_organism_from_accession(seq_id)
+                        organism_info[i] = info
+                
+                # Map organism information to genes dataframe
+                genes_df['organism'] = genes_df.index.map(
+                    lambda idx: organism_info.get(idx, {}).get('organism', 'Unknown species')
                 )
                 
-                # Display the DataFrame with organism names instead of sequence_name
-                st.dataframe(genes_df[['organism', 'id', 'name', 'start_pos', 'end_pos', 'confidence']], use_container_width=True)
+                # Map antibiotic resistance information
+                genes_df['potential_resistance'] = genes_df.index.map(
+                    lambda idx: organism_info.get(idx, {}).get('potential_resistance', 'Unknown')
+                )
+                
+                # Display the DataFrame with organism names and without sequence_name
+                st.dataframe(genes_df[['organism', 'id', 'name', 'potential_resistance', 'start_pos', 'end_pos', 'confidence']], use_container_width=True)
                 
                 # Gene visualization
                 st.subheader("Gene Location Visualization")
@@ -925,31 +937,15 @@ elif st.session_state.nav_page == "home":
                 # Display protein sequences
                 for i, protein in enumerate(st.session_state.proteins):
                     with st.expander(f"Protein for gene {protein['gene_name']} ({protein['gene_id']})"):
-                        # Create two columns for protein info and 3D structure
-                        col1, col2 = st.columns([1, 1])
-                        
-                        with col1:
-                            st.markdown(f"**Sequence Name:** {protein['sequence_name']}")
-                            st.markdown(f"**Gene Name:** {protein['gene_name']}")
-                            st.markdown(f"**Gene ID:** {protein['gene_id']}")
-                            st.text_area(f"Protein Sequence {i+1}", protein['protein_sequence'], height=150)
-                        
-                        with col2:
-                            # Add 3D protein visualization
-                            st.subheader("3D Protein Structure")
-                            render_protein_3d(protein['gene_name'])
-                            st.caption("Drag to rotate, scroll to zoom")
+                        st.markdown(f"**Gene Name:** {protein['gene_name']}")
+                        st.markdown(f"**Gene ID:** {protein['gene_id']}")
+                        st.text_area(f"Protein Sequence {i+1}", protein['protein_sequence'], height=150)
+                        st.markdown(f"**Length:** {len(protein['protein_sequence'])} amino acids")
                 
                 # Protein domain visualization
                 st.subheader("Protein Domain Analysis")
                 protein_plot = create_protein_domain_plot(st.session_state.proteins)
                 st.plotly_chart(protein_plot, use_container_width=True)
-                
-                # Add full 3D interactive view for the first protein
-                if st.session_state.proteins:
-                    st.subheader("Interactive 3D Protein Analysis")
-                    st.info("Showing detailed 3D visualization and amino acid composition")
-                    create_interactive_protein_view(st.session_state.proteins[0])
             else:
                 st.info("No protein sequences were generated.")
         
