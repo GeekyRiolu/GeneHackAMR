@@ -887,59 +887,28 @@ elif st.session_state.nav_page == "home":
                 # Convert to DataFrame for display
                 genes_df = pd.DataFrame(st.session_state.genes)
                 
-                # Sample GI IDs to use for demonstration (these would normally come from your sequence data)
-                sample_ids = [
-                    "gi|2949256985|gb|PV357209.1|",
-                    "gi|2955779261|gb|CP186947.1|",
-                    "gi|2907303961|gb|CP180162.1|",
-                    "gi|2944053110|gb|CP185129.1|",
-                    "gi|2944072299|gb|CP185207.1|",
-                    "gi|2957198048|gb|CP187245.1|",
-                    "gi|2936382141|gb|CP127996.1|",
-                    "gi|2929938784|gb|CP184032.1|",
-                    "gi|2955378441|gb|CP186876.1|",
-                    "gi|2944049663|gb|CP185092.1|"
-                ]
+                # Create organism mapping dictionary based on gene names
+                organism_mapping = {
+                    'mecA': 'Staphylococcus aureus',
+                    'vanA': 'Enterococcus faecium',
+                    'tetM': 'Multiple species',
+                    'blaTEM': 'Escherichia coli',
+                    'blaCTX-M': 'Enterobacteriaceae',
+                    'blaKPC': 'Klebsiella pneumoniae',
+                    'blaNDM': 'Enterobacteriaceae',
+                    'qnrA': 'Enterobacteriaceae',
+                    'qnrS': 'Salmonella/Escherichia coli',
+                    'aac': 'Pseudomonas aeruginosa',
+                    'ermB': 'Streptococcus species'
+                }
                 
-                # Use OpenAI to identify organisms from the accession IDs
-                organism_info = {}
-                for i, seq_id in enumerate(sample_ids):
-                    if i < len(genes_df):
-                        # Get organism info for each sequence ID
-                        info = identify_organism_from_accession(seq_id)
-                        organism_info[i] = info
-                
-                # Map organism information to genes dataframe
-                genes_df['organism'] = genes_df.index.map(
-                    lambda idx: organism_info.get(idx, {}).get('organism', 'Unknown species')
+                # Map gene names to organism names
+                genes_df['organism'] = genes_df['name'].apply(
+                    lambda x: organism_mapping.get(x, 'Unknown species')
                 )
                 
-                # Map antibiotic resistance information
-                genes_df['potential_resistance'] = genes_df.index.map(
-                    lambda idx: organism_info.get(idx, {}).get('potential_resistance', 'Unknown')
-                )
-                
-                # Create a more detailed and visually appealing display
-                st.markdown("""
-                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #1976d2; margin-bottom: 20px;">
-                    <h3 style="color: #1976d2; margin-top: 0;">Antimicrobial Resistance Gene Analysis</h3>
-                    <p>The following genes associated with antimicrobial resistance were detected in the analyzed sequence.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Display the DataFrame with organism names and without sequence_name
-                st.dataframe(genes_df[['organism', 'name', 'potential_resistance', 'confidence']], use_container_width=True)
-                
-                # Display organisms found in a pie chart
-                st.subheader("Organisms Distribution")
-                org_counts = genes_df['organism'].value_counts().reset_index()
-                org_counts.columns = ['Organism', 'Count']
-                
-                fig = px.pie(org_counts, values='Count', names='Organism', 
-                             title='Distribution of Organisms Harboring Resistance Genes',
-                             color_discrete_sequence=px.colors.qualitative.Pastel)
-                fig.update_traces(textposition='inside', textinfo='percent+label')
-                st.plotly_chart(fig, use_container_width=True)
+                # Display the DataFrame with organism names instead of sequence_name
+                st.dataframe(genes_df[['organism', 'id', 'name', 'start_pos', 'end_pos', 'confidence']], use_container_width=True)
                 
                 # Gene visualization
                 st.subheader("Gene Location Visualization")
@@ -952,8 +921,32 @@ elif st.session_state.nav_page == "home":
         with all_tabs[1]:
             st.header("Microbiology Report")
             
-            if st.session_state.genes and st.session_state.resistance_data:
-                # Create a clinical-style microbiology report
+            if st.session_state.genes:
+                # Create a DataFrame for analysis
+                genes_df = pd.DataFrame(st.session_state.genes)
+                
+                # Create organism mapping dictionary based on gene names (same as in tab 0)
+                organism_mapping = {
+                    'mecA': 'Staphylococcus aureus',
+                    'vanA': 'Enterococcus faecium',
+                    'tetM': 'Multiple species',
+                    'blaTEM': 'Escherichia coli',
+                    'blaCTX-M': 'Enterobacteriaceae',
+                    'blaKPC': 'Klebsiella pneumoniae',
+                    'blaNDM': 'Enterobacteriaceae', 
+                    'qnrA': 'Enterobacteriaceae',
+                    'qnrS': 'Salmonella/Escherichia coli',
+                    'aac': 'Pseudomonas aeruginosa',
+                    'ermB': 'Streptococcus species'
+                }
+                
+                # Map gene names to organism names if not already done
+                if 'organism' not in genes_df.columns:
+                    genes_df['organism'] = genes_df['name'].apply(
+                        lambda x: organism_mapping.get(x, 'Unknown species')
+                    )
+                
+                # Display clinical microbiology report header
                 st.markdown("""
                 <div style="background-color: white; border-radius: 10px; padding: 20px; border: 1px solid #e0e0e0; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
                     <h3 style="color: #1976d2; text-align: center; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">
@@ -963,70 +956,29 @@ elif st.session_state.nav_page == "home":
                     <div style="margin-top: 20px;">
                         <p><strong>Sample ID:</strong> """ + st.session_state.current_sequence_name + """</p>
                         <p><strong>Analysis Date:</strong> May 18, 2025</p>
-                        <p><strong>Report Generated:</strong> Automated Genomic Analysis</p>
-                    </div>
-                    
-                    <div style="margin-top: 20px;">
-                        <h4 style="color: #1976d2;">SUMMARY FINDINGS</h4>
-                        <p>Genomic analysis has identified antimicrobial resistance genes associated with the following organisms:</p>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Extract organism information from the genes dataframe
-                genes_df = pd.DataFrame(st.session_state.genes)
+                # Summarize organisms found
+                st.subheader("Organisms Identified")
                 
-                # Sample GI IDs to use for demonstration (these would normally come from your sequence data)
-                sample_ids = [
-                    "gi|2949256985|gb|PV357209.1|",
-                    "gi|2955779261|gb|CP186947.1|",
-                    "gi|2907303961|gb|CP180162.1|",
-                    "gi|2944053110|gb|CP185129.1|",
-                    "gi|2944072299|gb|CP185207.1|",
-                    "gi|2957198048|gb|CP187245.1|",
-                    "gi|2936382141|gb|CP127996.1|",
-                    "gi|2929938784|gb|CP184032.1|",
-                    "gi|2955378441|gb|CP186876.1|",
-                    "gi|2944049663|gb|CP185092.1|"
-                ]
-                
-                # Use OpenAI to identify organisms if not already identified
-                if 'organism' not in genes_df.columns:
-                    # Get organism information
-                    organism_info = {}
-                    for i, seq_id in enumerate(sample_ids):
-                        if i < len(genes_df):
-                            # Get organism info for each sequence ID
-                            info = identify_organism_from_accession(seq_id)
-                            organism_info[i] = info
-                    
-                    # Map organism information to genes dataframe
-                    genes_df['organism'] = genes_df.index.map(
-                        lambda idx: organism_info.get(idx, {}).get('organism', 'Unknown species')
-                    )
-                    
-                    # Map antibiotic resistance information
-                    genes_df['potential_resistance'] = genes_df.index.map(
-                        lambda idx: organism_info.get(idx, {}).get('potential_resistance', 'Unknown')
-                    )
-                
-                # Group by organism to create a clinical summary
+                # Group genes by organism
                 organisms = genes_df['organism'].unique()
                 
-                # Create clinical report for each organism
+                # Display each organism with associated genes
                 for organism in organisms:
                     org_genes = genes_df[genes_df['organism'] == organism]
+                    gene_names = ', '.join(org_genes['name'].values)
                     
-                    # Create a card for each organism
                     st.markdown(f"""
                     <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0; border-left: 4px solid #1976d2;">
                         <h4 style="color: #1976d2; margin-top: 0;">{organism}</h4>
-                        <p><strong>Resistance Genes Detected:</strong> {', '.join(org_genes['name'].values)}</p>
-                        <p><strong>Potential Resistance:</strong> {', '.join(org_genes['potential_resistance'].values)}</p>
+                        <p><strong>Resistance Genes:</strong> {gene_names}</p>
                     </div>
                     """, unsafe_allow_html=True)
                 
-                # Get recommendations
+                # Display antibiotic recommendations if available
                 if st.session_state.recommendations:
                     # Separate effective and ineffective antibiotics
                     effective = []
@@ -1038,14 +990,8 @@ elif st.session_state.nav_page == "home":
                         else:
                             ineffective.append(rec)
                     
-                    # Create a clinical treatment guidance section
-                    st.markdown("""
-                    <div style="background-color: white; border-radius: 10px; padding: 20px; margin-top: 30px; border: 1px solid #e0e0e0; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-                        <h3 style="color: #1976d2; text-align: center; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">
-                            TREATMENT GUIDANCE
-                        </h3>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Create a treatment guidance section
+                    st.subheader("Treatment Guidance")
                     
                     # Display effective treatments
                     if effective:
@@ -1056,7 +1002,7 @@ elif st.session_state.nav_page == "home":
                         """, unsafe_allow_html=True)
                         
                         for e in effective:
-                            st.markdown(f"""<li><strong>{e['antibiotic']}</strong> - {e['rationale']}</li>""", unsafe_allow_html=True)
+                            st.markdown(f"<li><strong>{e['antibiotic']}</strong> - {e['rationale']}</li>", unsafe_allow_html=True)
                         
                         st.markdown("</ul></div>", unsafe_allow_html=True)
                     
@@ -1069,22 +1015,22 @@ elif st.session_state.nav_page == "home":
                         """, unsafe_allow_html=True)
                         
                         for i in ineffective:
-                            st.markdown(f"""<li><strong>{i['antibiotic']}</strong> - {i['rationale']}</li>""", unsafe_allow_html=True)
+                            st.markdown(f"<li><strong>{i['antibiotic']}</strong> - {i['rationale']}</li>", unsafe_allow_html=True)
                         
                         st.markdown("</ul></div>", unsafe_allow_html=True)
                 
-                # Clinical notes and disclaimer
+                # Add clinical notes
                 st.markdown("""
                 <div style="background-color: #fffde7; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; margin-top: 20px;">
                     <h4 style="color: #ff8f00; margin-top: 0;">Clinical Notes</h4>
                     <p>This report is based on genomic analysis of bacterial sequences and provides guidance on potential antimicrobial resistance patterns. 
                     Results should be interpreted in conjunction with phenotypic susceptibility testing and clinical judgment.</p>
-                    <p><em>Disclaimer: This report is for research purposes only and should not be used as the sole basis for clinical decision making.</em></p>
+                    <p><em>Disclaimer: This report is for research purposes only.</em></p>
                 </div>
                 """, unsafe_allow_html=True)
             else:
                 st.info("No analysis data available to generate a microbiology report.")
-            
+        
         # Tab 2: Protein Sequences
         with all_tabs[2]:
             st.header("Protein Sequences")
