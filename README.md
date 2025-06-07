@@ -29,7 +29,7 @@ Antimicrobial resistance is one of the most critical challenges in global health
 To foster collaboration and innovation, all submissions must adhere to the following:
 
 1. **MIT License Requirement**  
-   All submissions must be licensed under the [MIT License](LICENSE).
+   All submissions must be licensed under the [License](LICENSE).
 
 2. **Public Repositories**  
    Submissions must be hosted in public repositories (e.g., GitHub).
