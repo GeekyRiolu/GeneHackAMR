@@ -24,4 +24,22 @@ Antimicrobial resistance is one of the most critical challenges in global health
 
 ---
 
+## Open Source Submission Requirements
 
+To foster collaboration and innovation, all submissions must adhere to the following:
+
+1. **MIT License Requirement**  
+   All submissions must be licensed under the [MIT License](LICENSE).
+
+2. **Public Repositories**  
+   Submissions must be hosted in public repositories (e.g., GitHub).
+
+3. **Clear Documentation**  
+   Each submission must include clear documentation, outlining usage, setup, and contribution guidelines.
+
+4. **Structure for Community Contribution**  
+   Repositories should be structured to facilitate community contributions, including a `CONTRIBUTING.md` file and issue templates.
+
+---
+
+For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
