@@ -4,6 +4,8 @@ import plotly.express as px
 from streamlit_lottie import st_lottie
 import requests
 import json
+from dotenv import load_dotenv
+load_dotenv()
 
 # Import custom modules
 from data.database import (
