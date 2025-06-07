@@ -1,45 +1,110 @@
+
+
+---
+
 # 🧬 GeneHack AMR
 
-**GeneHack AMR** is a machine learning-powered tool designed to predict **antimicrobial resistance (AMR)** from genomic or clinical data. Built to support researchers, healthcare professionals, and bioinformatics experts, this tool leverages trained ML models to assist in identifying resistant microbial strains quickly and accurately.
+**GeneHack AMR** is an interactive web platform for rapid identification of antimicrobial resistance (AMR) genes and data-driven antibiotic recommendations from bacterial genome sequences. It leverages NCBI BLAST, AI-powered reporting, and intuitive visualizations to empower researchers and clinicians in the fight against antibiotic resistance.
 
 ---
 
-## 🚀 Project Motivation
+## 🚀 Features
 
-Antimicrobial resistance is one of the most critical challenges in global health today. Rapid and reliable prediction of AMR can:
-- Improve treatment decisions
-- Reduce misuse of antibiotics
-- Help contain the spread of resistant infections
-
-**GeneHack AMR** was created during **Docathon** to demonstrate how machine learning can be applied for impactful bioinformatics solutions.
-
----
-
-## 🧠 What It Does
-
-- Predicts antimicrobial resistance based on structured input data
-- Supports input from clinical/genomic features
-- Provides easy-to-use web interface for non-technical users
-- Runs a trained ML model using Gradio/Streamlit
+- Upload or paste bacterial genome sequences (FASTA or raw DNA)
+- Detect AMR genes using BLAST against NCBI databases
+- Get AI-generated summary reports and antibiotic recommendations
+- Explore results with interactive visualizations and tables
+- Save and revisit previous analyses
 
 ---
 
-## Open Source Submission Requirements
+## 🛠️ Setup Instructions
 
-To foster collaboration and innovation, all submissions must adhere to the following:
+### 1. **Clone the Repository**
 
-1. **MIT License Requirement**  
-   All submissions must be licensed under the [License](LICENSE).
+```bash
+git clone https://github.com/yourusername/genehack-amr.git
+cd genehack-amr
+```
 
-2. **Public Repositories**  
-   Submissions must be hosted in public repositories (e.g., GitHub).
+### 2. **Create and Activate a Virtual Environment**
 
-3. **Clear Documentation**  
-   Each submission must include clear documentation, outlining usage, setup, and contribution guidelines.
+```bash
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
 
-4. **Structure for Community Contribution**  
-   Repositories should be structured to facilitate community contributions, including a `CONTRIBUTING.md` file and issue templates.
+# macOS/Linux
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. **Install Dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. **Set Up Environment Variables**
+
+Create a `.env` file in the project root with your OpenAI API key:
+
+```
+OPENAI_API_KEY=sk-...
+```
+
+Or, set the environment variable in your shell before running the app.
+
+### 5. **Run the Application**
+
+```bash
+streamlit run app.py
+```
+or
+```bash
+streamlit run app.py --server.address localhost --server.port 8501
+```
+
+The app will open in your browser at `http://localhost:8501`.
 
 ---
 
-For more details, see [CONTRIBUTING.md](CONTRIBUTING.md).
+## 📂 Project Structure
+
+```
+.
+├── app.py                  # Main Streamlit app
+├── requirements.txt        # Python dependencies
+├── utils/                  # Bioinformatics, AI, and visualization modules
+├── data/                   # Database and AMR data utilities
+├── .streamlit/             # Streamlit configuration
+├── genehack.db             # Local database (auto-created)
+└── README.md
+```
+
+---
+
+## 🧑‍🔬 Usage
+
+1. Upload a FASTA file or paste a DNA sequence in the sidebar.
+2. Click "Analyze Sequence" to run BLAST and AI-powered analysis.
+3. Review predicted genes, protein sequences, and antibiotic recommendations in the results tabs.
+4. Save your analysis for future reference.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open issues or pull requests for improvements, bug fixes, or new features.
+
+---
+
+## 📜 License
+
+MIT License
+
+---
+
+**Empowering the scientific and medical community with rapid, AI-driven AMR analysis.**
+
+---
