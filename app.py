@@ -1218,4 +1218,5 @@ st.markdown("---")
 st.markdown("### 🧬 GeneHack AMR")
 st.markdown("Antimicrobial Resistance Analysis Platform for Bacterial Genomes")
 
-
+if __name__ == "__main__":
+    main()
