@@ -1177,7 +1177,8 @@ def main():
                 """, unsafe_allow_html=True)
             
             # Example/demo section with improved styling
-            with st.expander("📚 How to use GeneHack AMR"):
+            # Replace the current expander content with this:
+            with st.expander("📚 How to use GeneHack AMR", expanded=False):
                 # Split content into columns
                 demo_col1, demo_col2 = st.columns([3, 2])
                 
@@ -1185,30 +1186,40 @@ def main():
                     st.markdown("""
                     <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
                         <h3 style="color: #1976d2; margin-top: 0;">Quick Start Guide</h3>
-                        
-                        <ol style="padding-left: 20px;">
-                            <li><b>Select input method</b> in the sidebar: Upload FASTA, paste raw sequence, or load saved</li>
-                            <li><b>Click 'Analyze Sequence'</b> to process the genomic data</li>
-                            <li><b>Review results</b> across the interactive tabs</li>
-                        </ol>
-                        
-                        <h4 style="color: #1976d2; margin-top: 20px;">Results Breakdown</h4>
-                        <ul style="list-style-type: none; padding-left: 0;">
-                            <li>🧫 <b>Predicted Genes</b> - AMR genes with organism identification</li>
-                            <li>🔬 <b>Protein Sequences</b> - Translated proteins with domain analysis</li>
-                            <li>💊 <b>Antibiotic Recommendations</b> - Effective treatment options</li>
-                            <li>🔍 <b>BLAST Results</b> - Detailed gene matches from databases</li>
-                        </ul>
-                        
-                        <h4 style="color: #1976d2; margin-top: 20px;">Key Capabilities</h4>
-                        <ul style="padding-left: 20px;">
-                            <li><b>Advanced Organism Identification</b> - Identifies bacterial species from sequence IDs</li>
-                            <li><b>Resistance Pattern Analysis</b> - Detects patterns of antimicrobial resistance</li>
-                            <li><b>Treatment Guidance</b> - Provides evidence-based antibiotic recommendations</li>
-                            <li><b>Interactive Visualizations</b> - Helps understand complex genomic data</li>
-                        </ul>
                     </div>
                     """, unsafe_allow_html=True)
+                    
+                    st.markdown("""
+                    1. **Select input method** in the sidebar: Upload FASTA, paste raw sequence, or load saved  
+                    2. **Click 'Analyze Sequence'** to process the genomic data  
+                    3. **Review results** across the interactive tabs
+                    """)
+                    
+                    st.markdown("""
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 15px;">
+                        <h4 style="color: #1976d2; margin-top: 0;">Results Breakdown</h4>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.markdown("""
+                    - 🧫 **Predicted Genes** - AMR genes with organism identification  
+                    - 🔬 **Protein Sequences** - Translated proteins with domain analysis  
+                    - 💊 **Antibiotic Recommendations** - Effective treatment options  
+                    - 🔍 **BLAST Results** - Detailed gene matches from databases
+                    """)
+                    
+                    st.markdown("""
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 15px;">
+                        <h4 style="color: #1976d2; margin-top: 0;">Key Capabilities</h4>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.markdown("""
+                    - **Advanced Organism Identification** - Identifies bacterial species from sequence IDs  
+                    - **Resistance Pattern Analysis** - Detects patterns of antimicrobial resistance  
+                    - **Treatment Guidance** - Provides evidence-based antibiotic recommendations  
+                    - **Interactive Visualizations** - Helps understand complex genomic data
+                    """)
                     
                 with demo_col2:
                     if laboratory_animation:
