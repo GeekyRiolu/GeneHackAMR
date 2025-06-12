@@ -92,6 +92,26 @@ The app will open in your browser at `http://localhost:8501`.
 4. Save your analysis for future reference.
 
 ---
+## 🧪 Testing with Example Sequences
+
+To help you get started or to test the GeneHack AMR platform, example bacterial genome sequences are provided in the file [`TEST GENEHACK.txt`](./TEST%20GENEHACK.txt) in this repository. This file contains several real example sequences, such as:
+
+- E. coli with Ampicillin Resistance
+- Staphylococcus aureus with Methicillin Resistance (MRSA)
+- Tuberculosis fragment with Isoniazid Resistance
+- Pseudomonas aeruginosa with Quinolone Resistance
+- K. pneumoniae with Carbapenem Resistance
+
+**How to use:**
+1. Open the [`TEST GENEHACK.txt`](./TEST%20GENEHACK.txt) file.
+2. Copy one of the example DNA sequences (the string of letters below each “Example” heading).
+3. In the GeneHack AMR app, paste the sequence into the DNA input field.
+4. Click “Analyze Sequence” to try out the platform’s features with a real test case.
+
+This is a quick way to verify the product is working as expected and to see example outputs.
+
+---
+
 
 ## 🤝 Contributing
 
