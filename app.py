@@ -1218,16 +1218,4 @@ st.markdown("---")
 st.markdown("### 🧬 GeneHack AMR")
 st.markdown("Antimicrobial Resistance Analysis Platform for Bacterial Genomes")
 
-# Create Streamlit config directory and config.toml file if not exists
-import os
-if not os.path.exists(".streamlit"):
-    os.makedirs(".streamlit")
 
-if not os.path.exists(".streamlit/config.toml"):
-    with open(".streamlit/config.toml", "w") as f:
-        f.write('''
-[server]
-headless = true
-address = "0.0.0.0"
-port = 8501
-        ''')
