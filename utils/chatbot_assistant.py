@@ -3,12 +3,16 @@ Chatbot assistant for the GeneHack AMR application powered by OpenAI's GPT model
 """
 import json
 import os
+import streamlit as st
 from typing import List, Dict, Any, Optional
 from openai import OpenAI
 
 # Initialize OpenAI client
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
+# OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+# client = OpenAI(api_key=OPENAI_API_KEY)
+
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # System prompt that defines the chatbot's behavior and capabilities
 SYSTEM_PROMPT = """

@@ -1,11 +1,15 @@
 import os
 import json
+import streamlit as st
 from typing import Dict, Any, List
 from openai import OpenAI
 
 # Get OpenAI API key from environment variables
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-openai = OpenAI(api_key=OPENAI_API_KEY)
+# OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+# openai = OpenAI(api_key=OPENAI_API_KEY)
+
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+openai = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def generate_summary_report(data: Dict[str, Any]) -> str:
     """

@@ -3,12 +3,16 @@ Sequence identifier module for mapping NCBI sequence IDs to organism names and o
 """
 import os
 import re
+import streamlit as st
 from typing import Dict, Any, List
 from openai import OpenAI
 
 # Initialize OpenAI client
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
+# OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+# client = OpenAI(api_key=OPENAI_API_KEY)
+
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def identify_organism_from_accession(accession_id: str) -> Dict[str, str]:
     """
