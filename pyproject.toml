@@ -16,4 +16,3 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "sqlalchemy>=2.0.41",
 ]
-OPENAI_API_KEY="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"
